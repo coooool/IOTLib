@@ -1,0 +1,10 @@
+﻿[*.cs]
+
+# CS8625: 无法将 null 字面量转换为非 null 的引用类型。
+dotnet_diagnostic.CS8625.severity = none
+
+# CS8602: 解引用可能出现空引用。
+dotnet_diagnostic.CS8602.severity = none
+
+# CS8603: 可能返回 null 引用。
+dotnet_diagnostic.CS8603.severity = none

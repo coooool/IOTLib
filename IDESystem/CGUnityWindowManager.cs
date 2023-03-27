@@ -1,0 +1,92 @@
+using Cysharp.Threading.Tasks;
+using IOTLib;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+namespace IOTLib
+{
+    public class CGUnityWindowManager : MonoBehaviour
+    {
+        static CGUnityWindowManager Instance;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void InitEditorWindow()
+        {
+            var newGameObject = new GameObject("__EditorWindow__", typeof(CGUnityWindowManager));
+            newGameObject.hideFlags = HideFlags.HideInHierarchy;
+        }
+
+        private void Awake()
+        {
+            Instance = this;
+            DontDestroyOnLoad(this);
+        }
+
+
+        private void OnDestroy()
+        {
+            Instance = null;
+        }
+
+        public static void Close()
+        {
+            if (Instance.TryGetComponent<CGPrefabEditorWindow>(out var cgpew))
+            {
+                foreach (var a in TagSystem.Find<ExportCGPrefab>(true, CGResources.TAGName))
+                {
+                    a.SendMessage("OnSceneEditorStateNotify", false, SendMessageOptions.DontRequireReceiver);
+
+                    if (a.TryGetComponent<DragGameObject>(out var b))
+                        Destroy(b);
+                }
+
+                Destroy(Instance.GetComponent<CGPrefabWindow>());
+                Destroy(Instance.GetComponent<CGSceneToolsWindow>());
+                Destroy(Instance.GetComponent<CGHandleDragMouse>());
+                Destroy(cgpew);
+            }
+        }
+
+        public static void Show(params string[] tagTypes)
+        {
+            if(tagTypes.Length == 0) tagTypes = new[] {CGResources.TAGName};
+            
+            if (Instance.TryGetComponent<CGPrefabEditorWindow>(out _) == false)
+            {
+                Instance.gameObject.AddComponent<CGSceneToolsWindow>();
+                Instance.gameObject.AddComponent<CGPrefabWindow>();
+                Instance.gameObject.AddComponent<CGPrefabEditorWindow>();
+                Instance.gameObject.AddComponent<CGHandleDragMouse>();
+
+                foreach (var a in TagSystem.Find<ExportCGPrefab>(true, tagTypes))
+                {
+                    a.gameObject.AddComponent<DragGameObject>();
+
+                    a.SendMessage("OnSceneEditorStateNotify", true, SendMessageOptions.DontRequireReceiver);
+                }
+            }
+        }
+
+        public static void Toggle()
+        {
+            if (Instance.TryGetComponent<CGSceneToolsWindow>(out _))
+            {
+                Close();
+            }
+            else
+            {
+                Show();
+            }
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyUp(KeyCode.F5))
+            {
+                Toggle();
+            }
+        }
+    }
+}
