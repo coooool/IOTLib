@@ -38,11 +38,52 @@ namespace IOTLib
         }
 
         /// <summary>
+        /// 聚集这个设备，摄像机正面对着它
+        /// </summary>
+        /// <param name="go"></param>
+        /// <param name="complete"></param>
+        public static void FAndLookAt(this GameObject go, Action complete = null)
+        {
+            CameraHandle.F(go, complete, "D");
+        }
+
+        /// <summary>
+        /// 聚焦一个点
+        /// </summary>
+        /// <param name="world_pos"></param>
+        /// <param name="radius">体积</param>
+        public static void FCameraToThis(this Vector3 world_pos, float radius = 1.1f)
+        {
+            CameraHandle.F(world_pos, null, "A", radius);
+        }
+
+        /// <summary>
         /// 到空状态
         /// </summary>
         public static void ToNullState()
         {
             GameHandleEventSystem.TriggerEvent(CameraHandle.HandleName, EmptyState.TriggerEventName);
+        }
+
+        /// <summary>
+        /// 获取A状态
+        /// </summary>
+        /// <param name="modelA"></param>
+        /// <returns></returns>
+        public static bool GetAStateUnit(out PlayerModelA modelA)
+        {
+            modelA = null;
+
+            var handle = GameHandleSystem.GetFlowGraphFromName(CameraHandle.HandleName);
+            if (handle == null)
+            {
+                Debug.LogError("获取PlayerModelA单元失败，还未初始化");
+                return false;
+            }
+
+            modelA = handle.GraphRef.GetUnit<PlayerModelA>();
+
+            return modelA != null;
         }
     }
 }

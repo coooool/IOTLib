@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace IOTLib.Scenes
@@ -9,6 +10,9 @@ namespace IOTLib.Scenes
     public class SceneLoader
     {
         private static bool _loaded = false;
+
+        // 设置激活的场景名。即将切换场景
+        public static UnityEvent<string,string> PreSetActiveScene = new ();
 
         /// <summary>
         /// 加载一个附加场景
@@ -31,6 +35,7 @@ namespace IOTLib.Scenes
 
             // Core 名称
             var CoreSceneName = DBServer.GetVar("SCENELOADER_CORE_NAME", "Core");
+            var OldSceneName = SceneManager.GetActiveScene().name;
 
             for (var i = 0; i < SceneManager.sceneCount; i++)
             {
@@ -53,9 +58,11 @@ namespace IOTLib.Scenes
 
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive).ToUniTask(progress);
 
+            PreSetActiveScene?.Invoke(OldSceneName, sceneName);
+
             SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
 
-            //DynamicGI.UpdateEnvironment();
+            DynamicGI.UpdateEnvironment();
 
             progress?.LoadClose();
         }

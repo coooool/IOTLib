@@ -9,6 +9,7 @@ using static UnityEngine.Networking.UnityWebRequest;
 using System.Xml.Linq;
 using UnityEngine.Assertions;
 using System.Data.Common;
+using UnityEngine.Networking;
 
 namespace IOTLib.Configure
 {
@@ -51,7 +52,14 @@ namespace IOTLib.Configure
                     {
                         result?.Invoke(text, data);
 
-                        url = url.Replace(text, data);
+                        if (mat.Groups[0].Index > 0)
+                        {
+                            url = url.Replace(text, UnityWebRequest.EscapeURL(data));
+                        }
+                        else
+                        {
+                            url = url.Replace(text, data);
+                        }
                     }
                     else
                     {

@@ -41,6 +41,8 @@ namespace IOTLib.UserSystem
         /// </summary>
         public string Authorization { get; set; }
 
+        public string UserId { get; set; }
+
         public void Reset()
         {
             Authorization = string.Empty;

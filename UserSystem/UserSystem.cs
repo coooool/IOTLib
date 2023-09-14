@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using IOTLib.Configure;
 using Newtonsoft.Json.Linq;
 using UMOD;
 using UnityEngine;
@@ -70,7 +71,7 @@ namespace IOTLib.UserSystem
             Install.m_pathConfig = config;   
         }
 
-        private static JToken GetValue(string dataPath)
+        public static JToken GetValue(string dataPath)
         {
             Assert.IsTrue(string.IsNullOrEmpty(dataPath), "查询的路径不能为空!");
 
@@ -89,13 +90,52 @@ namespace IOTLib.UserSystem
         {
             Assert.IsFalse(string.IsNullOrEmpty(Install.m_pathConfig.UserName), "未配置数据路径");
 
+            if(Install.m_saveUserData == null && Application.isEditor)
+            {
+                var name = Install.m_pathConfig.UserName.TrimStart('$', '.');
+                Debug.LogWarning($"当前未登录却尝试获取用户名。建议在数据库中配置模拟值:{name}");
+                return DBServer.GetVar(name, string.Empty);
+            }
+
             return GetValue(Install.m_pathConfig.UserName).Value<string>();
         }
+
+        /// <summary>
+        /// 获取用户ID，可以在数据库中设置调试的数据
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUserId()
+        {
+            Assert.IsFalse(string.IsNullOrEmpty(Install.m_pathConfig.UserName), "未配置数据路径");
+
+            if (Install.m_saveUserData == null && Application.isEditor)
+            {
+                var name = Install.m_pathConfig.UserId.TrimStart('$', '.');
+                Debug.LogWarning($"当前未登录却尝试获取用户名。建议在数据库中配置模拟值:{name}");
+                return DBServer.GetVar(name, string.Empty);
+            }
+
+            return GetValue(Install.m_pathConfig.UserId).Value<string>();
+        }
+
 
         public static string GetUserToken()
         {
             Assert.IsFalse(string.IsNullOrEmpty(Install.m_pathConfig.Authorization), "未配置数据路径");
+
+            if (Install.m_saveUserData == null && Application.isEditor)
+            {
+                var name = Install.m_pathConfig.Authorization.TrimStart('$', '.');
+                Debug.LogWarning($"当前未登录却尝试获取用户名。建议在数据库中配置模拟值:{name}");
+                return DBServer.GetVar(name, string.Empty);
+            }
+
             return GetValue(Install.m_pathConfig.Authorization).Value<string>();
+        }
+
+        public static string GetStringValue(string path)
+        {
+            return GetValue(path).Value<string>();
         }
 
         public static string GetUserPicture()

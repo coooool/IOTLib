@@ -15,7 +15,7 @@ namespace IOTLib
 
         public HttpWaitYield(UnityWebRequest webRequest)
         {
-            request= new WeakReference<UnityWebRequest>(webRequest);
+            request = new WeakReference<UnityWebRequest>(webRequest);
         }
 
         public override bool keepWaiting

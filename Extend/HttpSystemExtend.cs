@@ -76,6 +76,30 @@ public static class HttpSystemExtend
             callBack
         );
     }
+
+    /// <summary>
+    /// 创建一个安全的HTTP请求
+    /// </summary>
+    /// <param name="mono"></param>
+    /// <param name="iBuild">构建器</param>
+    /// <param name="callBack"></param>
+    /// <returns></returns>
+    public static EasyRequest CreateHttpRequest(
+        this MonoBehaviour mono,
+        IRequestFactory iBuild,
+        Action<EasyRequest> callBack)
+    {
+        var cancelToken = mono.gameObject.GetCancellationTokenOnDestroy();
+
+        if (mono.GetCustomCancelToken(out var t))
+        {
+            cancelToken = t;
+        }
+
+        iBuild.SetCancellationToken(cancelToken);
+
+        return HttpSystem.New(iBuild, callBack);
+    }
     #endregion
 
     #region BaseFlowState
@@ -117,6 +141,18 @@ public static class HttpSystemExtend
             callBack
         );
     }
+
+    public static EasyRequest CreateHttpRequest(
+        this BaseFlowState state,
+        IRequestFactory iBuild,
+        Action<EasyRequest> callBack)
+    {
+        var cancelToken = state.DestroyOrExitStateCancelToken;
+
+        iBuild.SetCancellationToken(cancelToken);
+
+        return HttpSystem.New(iBuild, callBack);
+    }
     #endregion
 
     #region BaseSystem
@@ -151,6 +187,18 @@ public static class HttpSystemExtend
             new ConfigHttpBuild(config_request_name, sys.GetDropCancellationToken()).SetParameter(parameter),
             callBack
         );
+    }
+
+    public static EasyRequest CreateHttpRequest(
+       this BaseSystem sys,
+       IRequestFactory iBuild,
+       Action<EasyRequest> callBack)
+    {
+        var cancelToken = sys.GetDropCancellationToken();
+
+        iBuild.SetCancellationToken(cancelToken);
+
+        return HttpSystem.New(iBuild, callBack);
     }
     #endregion
 }

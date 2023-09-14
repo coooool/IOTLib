@@ -47,15 +47,18 @@ namespace IOTLib.Configure.ValueFactory
 
                 data.VarName = new KeyValuePair<string, string>[parameter_and_value.Length];
 
-                for (var i = 0; i < parameter_and_value.Length; i++)
+                if (parameter_and_value != null && parameter_and_value.Length > 0)
                 {
-                    var name_val = parameter_and_value[i].Split('?');
+                    for (var i = 0; i < parameter_and_value.Length; i++)
+                    {
+                        var name_val = parameter_and_value[i].Split('?');
 
-                    if (name_val.Length == 1)
-                        data.VarName[i] = new KeyValuePair<string, string>(name_val[0], string.Empty);
-                    else if (name_val.Length == 2)
-                        data.VarName[i] = new KeyValuePair<string, string>(name_val[0], name_val[1]);
-                    else throw new InvalidOperationException("错误的参数绑定形式,正确的应如a?b");
+                        if (name_val.Length == 1)
+                            data.VarName[i] = new KeyValuePair<string, string>(name_val[0], string.Empty);
+                        else if (name_val.Length == 2)
+                            data.VarName[i] = new KeyValuePair<string, string>(name_val[0], name_val[1]);
+                        else throw new InvalidOperationException("错误的参数绑定形式,正确的应如a?b");
+                    }
                 }
 
                 return true;

@@ -97,6 +97,11 @@ namespace IOTLib
 
         private void OnGUI()
         {
+            if (CGUnityWindowManager.GSetting.NoHeader)
+            {
+                return;
+            }
+
             GUI.skin = CGPrefabEditorWindow.GUIStyle;
 
             GUI.depth = 1;

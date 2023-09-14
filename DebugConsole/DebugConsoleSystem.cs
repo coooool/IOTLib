@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using IOTLib.Configure;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace IOTLib
     [GameSystem(AlwaysRun = true)]
     [SystemDescribe(Author = "昊",
        Dependent = "无",
-       Describe = "内联调试输出控制台",
+       Describe = "内联调试输出控制台,在变量系统中添加debug_log为true开启本系统",
        Name = "DebugConsole",
        Version = "0.1")]
     public class DebugConsoleSystem : BaseSystem
@@ -91,7 +92,10 @@ namespace IOTLib
         {
             if (!Application.isEditor)
             {
-                Application.logMessageReceived += ReceiveLog;
+                if (DBServer.GetVar("debug_log", false))
+                {
+                    Application.logMessageReceived += ReceiveLog;
+                }
             }
         }
     }

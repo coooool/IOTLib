@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace IOTLib.PointSystem
+namespace IOTLib
 {
     public interface IPointProvider
     {

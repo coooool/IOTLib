@@ -27,10 +27,13 @@ namespace IOTLib
         private Collider[] m_PlayerhitCollider = new Collider[2];
         private RaycastHit[] m_PlayerRaycastHit = new RaycastHit[2];
 
-        private UnityEngine.Camera mainCamera;
+        private Camera mainCamera;
+
+        private static PlayerModelA _global_A = null;
 
         public PlayerModelA() : base("播放模式A")
         {
+            _global_A = this;
         }
 
         void InitStartPos()
@@ -41,12 +44,32 @@ namespace IOTLib
         }
 
         /// <summary>
+        /// 直接设置当前位置
+        /// </summary>
+        /// <param name="pos"></param>
+        public void SetCustomPos(Vector3 pos)
+        {
+            m_TargetCameraState.SetPos(pos);
+            m_InterpolatingCameraState.SetPos(pos);
+        }
+
+        /// <summary>
+        /// 直接设置当前角度
+        /// </summary>
+        /// <param name="angles"></param>
+        public void SetCustomEulerAngles(Vector3 angles)
+        {
+            m_TargetCameraState.SetAngles(angles);
+            m_InterpolatingCameraState.SetAngles(angles);
+        }
+
+        /// <summary>
         /// 获取控制方向
         /// </summary>
         /// <returns></returns>
         Vector3 GetInputTranslationDirection()
         {
-            var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CGHandleDragMouse.MouseInDragWindow;
+            var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseInDragWindow;
 
             Vector3 direction = new Vector3();
             if (Input.GetKey(KeyCode.W))
@@ -113,7 +136,22 @@ namespace IOTLib
             var forward = mainCamera.transform.forward;
             var right = mainCamera.transform.right;
             var up = mainCamera.transform.up;
-            
+
+            var targetPYR = m_TargetCameraState.PYR(direction);
+
+            var distance = (m_TargetCameraState.XYZ() - mainCamera.transform.position).magnitude;
+
+            if (Physics.RaycastNonAlloc(
+                mainCamera.transform.position, 
+                targetPYR, 
+                m_PlayerRaycastHit,
+                distance, 
+                CameraControlSetting.Setting.m_LayerMask) > 0)
+            {
+                result = true;
+                direction = Vector3.zero;
+            }
+
             if (Physics.RaycastNonAlloc(mainCamera.transform.position, forward, m_PlayerRaycastHit, CameraControlSetting.Setting.m_PlayerSphereRadius, CameraControlSetting.Setting.m_LayerMask) > 0)
             {
                 if (direction.z > 0)
@@ -213,7 +251,7 @@ namespace IOTLib
             var translation = GetInputTranslationDirection() * Time.deltaTime;
 
             translation *= Mathf.Pow(1.65f, CameraControlSetting.Setting.boost);
-
+        
             //仿游戏加速移动
             if (Input.GetKey(KeyCode.LeftShift))
             {
@@ -237,14 +275,17 @@ namespace IOTLib
             }
 
             // 计算碰撞
+            var oldPos = m_TargetCameraState.XYZ();
+            m_TargetCameraState.Translate(translation);
+
             var easyOverlapTest = OverlapTest(ref translation);
 
-            m_TargetCameraState.Translate(translation);
+            if (easyOverlapTest)
+                m_TargetCameraState.SetPos(oldPos);
 
             var positionLerpPct = 1f - Mathf.Exp((Mathf.Log(1f - 0.99f) / CameraControlSetting.Setting.positionLerpTime) * Time.deltaTime);
             var rotationLerpPct = 1f - Mathf.Exp((Mathf.Log(1f - 0.99f) / CameraControlSetting.Setting.rotationLerpTime) * Time.deltaTime);
-
-            var oldPos = Vector3.zero;
+        
             if (easyOverlapTest == false)
             {
                 oldPos = new Vector3(m_InterpolatingCameraState.x, m_InterpolatingCameraState.y, m_InterpolatingCameraState.z);
@@ -270,9 +311,11 @@ namespace IOTLib
             {
                 cancellation.ThrowIfCancellationRequested();
 
-                Move();
+                await UniTask.Yield(PlayerLoopTiming.Update);
 
-                await UniTask.Yield();
+                cancellation.ThrowIfCancellationRequested();
+
+                Move();
             }
         }
 
@@ -283,7 +326,7 @@ namespace IOTLib
                 CameraControlSetting.Setting.ControlMethod = ModelControlTypeEnum.All;
             }
 
-            mainCamera = UnityEngine.Camera.main;
+            mainCamera = Camera.main;
             InitStartPos();
 
             StateChangedEvent?.Invoke(true);
@@ -303,6 +346,22 @@ namespace IOTLib
         public override UniTask Update(IFlow flow)
         {
             return base.Update(flow);
+        }
+
+        /// <summary>
+        /// 手动刷新像机控制方法
+        /// </summary>
+        public static void ManualUpdate()
+        {
+            _global_A.Move();
+        }
+
+        /// <summary>
+        /// 复位一次状态
+        /// </summary>
+        public static void ResetState()
+        {
+            _global_A.InitStartPos();
         }
     }
 }

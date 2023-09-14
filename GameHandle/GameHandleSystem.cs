@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine.Assertions;
 using System;
+using UnityEngine.Events;
 
 namespace IOTLib
 {
@@ -38,12 +39,13 @@ namespace IOTLib
         public override void OnCreate()
         {
             Ref_GlobalModuleSys = MODHandle.UnityInstall.GetComponent<MODHandle>();
+
             if(Ref_GlobalModuleSys == null) 
                 throw new InvalidOperationException("找不到MODHandle组件");
 
-            UniTask.Void(UpdateTaskLoop, GetDropCancellationToken());
+            PushGraphImmediately(new CameraHandle());
 
-            PushGraph(new CameraHandle());
+            UniTask.Void(UpdateTaskLoop, GetDropCancellationToken());
         }
 
         public override void OnDrop()
@@ -162,6 +164,20 @@ namespace IOTLib
             var ghs = SystemManager.GetSystem<GameHandleSystem>();
             var node = new TaskNode { FlowGraph = flowGraph, LifecycleRef = LifecycleRef, CancellationToken = null };
             ghs._taskList.Enqueue(node);
+        }
+
+        /// <summary>
+        /// 即时压入一个作业系统。通常仅用于初始化首个节点
+        /// </summary>
+        /// <param name="flowGraph"></param>
+        /// <param name="LifecycleRef"></param>
+        public static void PushGraphImmediately(IFlowStateGraph flowGraph)
+        {
+            var newLifecycleRef = new GameObject(flowGraph.GUID);
+            newLifecycleRef.hideFlags = HideFlags.HideInHierarchy;
+            newLifecycleRef.AddComponent<FlowStateGraphLifecycle>().Init(flowGraph);
+          
+            flowGraph.StartListener(new Flow());
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace IOTLib
         public float m_Offset;
 
         [Header("射线所有层")]
-        public bool use_all_layer = true;
+        public bool use_all_layer = false;
 
         [Header("射线碰撞层，可以剔除不进行检测的物体")]
         public LayerMask m_layer = ~0;
@@ -25,6 +25,7 @@ namespace IOTLib
             get
             {
                 if (use_all_layer) return LayerUtility.AllMaskLayer;
+
                 return m_layer;
             }
             set
@@ -34,6 +35,13 @@ namespace IOTLib
             }
         }
 
+        protected override void OnAwake()
+        {
+            if(LayerUtility.GetGroundLayer(out var g))
+            {
+                m_layer = g;
+            }
+        }
 
         void OnDrawGizmosSelected()
         {

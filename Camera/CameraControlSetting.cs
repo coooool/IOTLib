@@ -59,6 +59,9 @@ namespace IOTLib
         public bool UseDynamicBoost = false;
         public AnimationCurve DynamicBoostCurve = new AnimationCurve(new Keyframe(0f, 0.0f, 0f, 5f), new Keyframe(10f, 10f, 0f, 0f));
 
+        [Header("F聚焦物体时离地面最小距离")]
+        public float FObjectMinGroundDistance = 20;
+
         /// <summary>
         /// 添加摄像机控制方法
         /// </summary>

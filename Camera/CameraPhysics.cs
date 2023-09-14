@@ -190,12 +190,17 @@ namespace IOTLib
 
             if (count == 0)
             {
-                return new Vector3(targetPos.x, Mathf.Max(targetPos.y, cameraRadius), targetPos.z);
+                return GroundUtility.CalculatePositionToGround( 
+                    new Vector3(targetPos.x, Mathf.Max(targetPos.y, cameraRadius), targetPos.z)
+                    ,null
+                );
             }
             else if (count == 1)
             {
                 if (m_PlayerhitCollider[0].transform.position == targetPos)
-                    return new Vector3(targetPos.x, Mathf.Max(targetPos.y, cameraRadius), targetPos.z);
+                    return GroundUtility.CalculatePositionToGround(
+                        new Vector3(targetPos.x, Mathf.Max(targetPos.y, cameraRadius), targetPos.z), null
+                    );
             }
  
             Bounds bounds = new Bounds();
@@ -209,7 +214,9 @@ namespace IOTLib
                 Camera.main.transform.TransformDirection(Vector3.up)
             );
 
-            return new Vector3(newPosition.x, Mathf.Max(newPosition.y, cameraRadius), newPosition.z);
+            var val = new Vector3(newPosition.x, Mathf.Max(newPosition.y, cameraRadius), newPosition.z);
+            
+            return GroundUtility.CalculatePositionToGround(val, null);
         }
     }
 }

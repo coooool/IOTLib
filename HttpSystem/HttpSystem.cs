@@ -103,6 +103,7 @@ namespace IOTLib
                     // 生命周期已经结束
                     if(cur.CancellationToken.Value.IsCancellationRequested)
                     {
+                        cur.webRequest.Dispose();
                         return;
                     }
 
@@ -114,6 +115,10 @@ namespace IOTLib
                     if (cur.CancellationToken.HasValue && cur.CancellationToken.Value.IsCancellationRequested)
                     {
                         return;
+                    }
+                    else
+                    {
+                        cur.CancellationToken = null;
                     }
 
                     if (state.isDone)
@@ -128,7 +133,6 @@ namespace IOTLib
                         }
 
                         cur.doneCallBack?.Invoke(cur);
-                        //cur.webRequest.Dispose();
                     }
                     else
                     {

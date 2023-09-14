@@ -1,30 +1,28 @@
 ﻿using IOTLib.Sqlite3;
+using Mono.Data.Sqlite;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Text;
 using UnityEngine;
 
 namespace IOTLib.SaveDB.Points
 {
     public static class DBPointUtility
     {
-        public static bool Add(DBPointDataItem dBPointData, SQLiteConnection connection)
+        public static bool Add(DBPointDataItem dBPointData, SqliteConnection connection)
         {
             //id INTEGER PRIMARY KEY AUTOINCREMENT, group_name VARCHAR(255), name VARCHAR(255), data JSON
             try
             {
                 var sql = @"INSERT INTO points VALUES(NULL, @name, @data)";
 
-                using (var sqlcmd = new SQLiteCommand(connection))
+                using (var sqlcmd = new SqliteCommand(connection))
                 {
                     sqlcmd.CommandText = sql;
 
-                    var value_arg = new SQLiteParameter("@name", System.Data.DbType.AnsiString);
+                    var value_arg = new SqliteParameter("@name", System.Data.DbType.AnsiString);
                     value_arg.Value = dBPointData.name;
 
-                    var data_arg = new SQLiteParameter("@data", System.Data.DbType.Object);
+                    var data_arg = new SqliteParameter("@data", System.Data.DbType.Object);
                     data_arg.Value = dBPointData.data;
 
                     sqlcmd.Parameters.Add(value_arg);
@@ -33,21 +31,20 @@ namespace IOTLib.SaveDB.Points
                     return sqlcmd.ExecuteNonQuery() > 0;
                 }
             }
-            catch (SQLiteException sqlerr)
+            catch (SqliteException sqlerr)
             {
                 Debug.Log($"创建点失败:{sqlerr.ErrorCode}");
-
-                Debug.Log(sqlerr.ResultCode);
+                Debug.Log(sqlerr.ErrorCode);
             }
 
             return false;
         }
 
-        public static bool Remove(DBPointDataItem dBPointData, SQLiteConnection connection)
+        public static bool Remove(DBPointDataItem dBPointData, SqliteConnection connection)
         {
             var sql = @$"delete from points where id={dBPointData.id}";
 
-            using (var sqlcmd = new SQLiteCommand(connection))
+            using (var sqlcmd = new SqliteCommand(connection))
             {
                 sqlcmd.CommandText = sql;
 
@@ -63,7 +60,7 @@ namespace IOTLib.SaveDB.Points
         /// <param name="eulerAngle">欧拉角</param>
         /// <param name="connection">数据连接实例</param>
         /// <returns></returns>
-        public static bool UpdatePosAndEuler(int pointId, Vector3? pos, Vector3? eulerAngle, SQLiteConnection connection)
+        public static bool UpdatePosAndEuler(int pointId, Vector3? pos, Vector3? eulerAngle, SqliteConnection connection)
         {
             //id INTEGER PRIMARY KEY AUTOINCREMENT, group_name VARCHAR(255), name VARCHAR(255), data JSON
             try
@@ -76,7 +73,7 @@ namespace IOTLib.SaveDB.Points
 
                         Sqlite3Utility.ExecuteNoQuery(sql, cmd =>
                         {
-                            var pos_arg = new SQLiteParameter("@pos", System.Data.DbType.AnsiString);
+                            var pos_arg = new SqliteParameter("@pos", System.Data.DbType.AnsiString);
                             pos_arg.Value = pos.Value.ToOriginStr();
 
                             cmd.Parameters.Add(pos_arg);
@@ -89,7 +86,7 @@ namespace IOTLib.SaveDB.Points
 
                         Sqlite3Utility.ExecuteNoQuery(sql, cmd =>
                         {
-                            var euler_arg = new SQLiteParameter("@euler", System.Data.DbType.AnsiString);
+                            var euler_arg = new SqliteParameter("@euler", System.Data.DbType.AnsiString);
                             euler_arg.Value = eulerAngle.Value.ToOriginStr();
 
                             cmd.Parameters.Add(euler_arg);
@@ -101,7 +98,7 @@ namespace IOTLib.SaveDB.Points
 
                 return true;
             }
-            catch (SQLiteException sqlerr)
+            catch (SqliteException sqlerr)
             {
                 Debug.LogError($"更新失败:{sqlerr.ErrorCode}");
             }
@@ -115,7 +112,7 @@ namespace IOTLib.SaveDB.Points
         /// <param name="dBPointData">点数据</param>
         /// <param name="connection">连接器</param>
         /// <returns></returns>
-        public static bool UpdateData(DBPointDataItem dBPointData, SQLiteConnection connection)
+        public static bool UpdateData(DBPointDataItem dBPointData, SqliteConnection connection)
         {
             try
             {
@@ -127,7 +124,7 @@ namespace IOTLib.SaveDB.Points
 
                 Sqlite3Utility.ExecuteNoQuery(sql, cmd =>
                 {
-                    var pos_arg = new SQLiteParameter("@data", System.Data.DbType.AnsiString);
+                    var pos_arg = new SqliteParameter("@data", System.Data.DbType.AnsiString);
                     pos_arg.Value = dBPointData.data;
 
                     cmd.Parameters.Add(pos_arg);
@@ -135,7 +132,7 @@ namespace IOTLib.SaveDB.Points
 
                 return true;
             }
-            catch (SQLiteException sqlerr)
+            catch (SqliteException sqlerr)
             {
                 Debug.LogError($"更新失败:{sqlerr.ErrorCode}");
             }

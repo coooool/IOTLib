@@ -20,21 +20,27 @@ namespace IOTLib
         // 状态改变，True为进入，Exit为False
         public readonly static UnityEvent<bool> StateChangedEvent = new UnityEvent<bool>();
 
-        private UnityEngine.Camera camera;
+        private Camera camera;
         private GameObject ObserverTarget;
+
+        private Vector3 cameraOffset;
 
         public PlayerModelObserve():base("围绕观察物体模式")
         {
-            camera = UnityEngine.Camera.main;
+            camera = Camera.main;
         }
 
         async UniTaskVoid UpdateMouse(CancellationToken cancellation)
         {
-            var mouseScrollWheel = Vector3.zero;
+            Vector3 mouseScrollWheel;
+
+            camera = Camera.main;
 
             while (true)
             {
                 cancellation.ThrowIfCancellationRequested();
+
+                mouseScrollWheel = Vector3.zero;
 
                 if (Application.isFocused && !CameraHandle.IsPointerOverGameObject)
                 {  
@@ -42,9 +48,23 @@ namespace IOTLib
                     var oldRotation = camera.transform.rotation;
 
                     // 鼠标不在UI上，后续需要加入别的输入器
-                    if (!CameraHandle.IsPointerHoverGameObject)
+
+                    if (Input.GetMouseButton(2))
                     {
-                        mouseScrollWheel.z = Input.GetAxis("Mouse ScrollWheel");
+                        var mouseMovement = new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) / 2;
+                        var mouseSensitivityFactor = CameraControlSetting.Setting.mouseSensitivityCurve.Evaluate(mouseMovement.magnitude);
+
+                        Vector3 direction = mouseMovement * mouseSensitivityFactor;
+                        var dictory = direction * Time.deltaTime;
+                        dictory *= Mathf.Pow(1.65f, CameraControlSetting.Setting.boost);
+                        camera.transform.Translate(dictory);
+
+                        cameraOffset += dictory;
+                    }
+
+                    if (!CameraHandle.IsPointerHoverGameObject)
+                    { 
+                        mouseScrollWheel.z = Input.GetAxis("Mouse ScrollWheel") * CameraControlSetting.Setting.boost * 6;
                         camera.transform.Translate(mouseScrollWheel);
                     }
 
@@ -74,7 +94,7 @@ namespace IOTLib
         public override UniTask Enter(IFlow flow)
         {
             ObserverTarget = flow.Vars.Get<GameObject>("Target");
-
+            
             StateChangedEvent?.Invoke(true);
 
             UniTask.Void(UpdateMouse, DestroyOrExitStateCancelToken);

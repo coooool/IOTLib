@@ -48,7 +48,7 @@ namespace IOTLib
             }
             else
             {
-                EmptyState.IsStart = true;
+                //EmptyState.IsStart = true;
             }
 
             AddState(AnyState);
@@ -127,6 +127,14 @@ namespace IOTLib
             GameHandleEventSystem.TriggerEvent(HandleName, PlayerModelF.TriggerEventName, new KeyValuePairs(arg)); 
         }
 
+        public static void FAndLookAt(Vector3 Position, Vector3 lookAtV3, Action Complete = null, string Model = "A", float radius = 1.1f)
+        {
+            if (Complete == null) Complete = () => CameraHelpFunc.ToAState();
+
+            var arg = new { TARGET_POS = Position, RADIUS = radius, COMPLETE = Complete, MODEL = Model, LOOKATV3 = lookAtV3 };
+            GameHandleEventSystem.TriggerEvent(HandleName, PlayerModelF.TriggerEventName, new KeyValuePairs(arg));
+        }
+
         public static void F(IEnumerable<Vector3> Points, Action Complete = null, string Model = "A", float radius = 1.1f)
         {
             if (Complete == null) Complete = () => CameraHelpFunc.ToAState();
@@ -180,6 +188,44 @@ namespace IOTLib
 
             var arg = new { TARGET_POS = pos, QUATERNION = rotation, COMPLETE = Complete, TIME = Math.Max(0.01f, time) };
             GameHandleEventSystem.TriggerEvent(HandleName, PlayerModelGoPoint.TriggerEventName, new KeyValuePairs(arg));
+        }
+
+        /// <summary>
+        /// 设置当前位置
+        /// </summary>
+        /// <param name="world_pos">世界点</param>
+        public static void SetCurrentPosition(Vector3 world_pos)
+        {
+            SetCurrentPosition(world_pos, null);   
+        }
+
+        public static void SetCurrentPosition(Vector3 world_pos, Vector3? eulerAngles)
+        {
+            var handle = GameHandleSystem.GetFlowGraphFromName(HandleName);
+            if (handle == null)
+            {
+                Camera.main.transform.position = world_pos;
+                if (eulerAngles.HasValue)
+                    Camera.main.transform.eulerAngles = eulerAngles.Value;
+
+                //Debug.LogError("系统未初始化，无法获取像机作业系统");
+                return;
+            }
+
+            var cm = handle.GraphRef as CameraHandle;
+            var pa = cm.GetUnit<PlayerModelA>();
+            if (pa.IsListener)
+            {
+                pa.SetCustomPos(world_pos);
+                if (eulerAngles.HasValue)
+                    pa.SetCustomEulerAngles(eulerAngles.Value);
+            }
+            else
+            {
+                Camera.main.transform.position = world_pos;
+                if(eulerAngles.HasValue)
+                    Camera.main.transform.eulerAngles= eulerAngles.Value;
+            }
         }
 
         public static void EmptyAction()

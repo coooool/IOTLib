@@ -1,14 +1,10 @@
-﻿using IOTLib.SaveDB.Interceptor;
-using IOTLib.SaveDB.Points;
+﻿using IOTLib.SaveDB.Points;
+using Mono.Data.Sqlite;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.SQLite;
 using UMOD;
 using UnityEngine;
 using UnityEngine.Assertions;
-using static UnityEngine.Networking.UnityWebRequest;
 
 namespace IOTLib
 {
@@ -38,7 +34,7 @@ namespace IOTLib
         {
             var findVarSel = $"select value from vars where key=@key";
 
-            var sp = new SQLiteParameter("@key", System.Data.DbType.AnsiString);
+            var sp = new SqliteParameter("@key", System.Data.DbType.AnsiString);
             sp.Value = varName;
 
             if (Sqlite3.QuerySingleValue(findVarSel, out var data, sp))
@@ -47,6 +43,26 @@ namespace IOTLib
             }
 
             return defaultValue;
+        }
+
+        /// <summary>
+        /// 是否存在一个变量
+        /// </summary>
+        /// <param name="varName"></param>
+        /// <returns></returns>
+        public static bool HasVar(string varName)
+        {
+            var findVarSel = $"select value from vars where key=@key";
+
+            var sp = new SqliteParameter("@key", System.Data.DbType.AnsiString);
+            sp.Value = varName;
+
+            if (Sqlite3.QuerySingleValue(findVarSel, out var data, sp))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public static Vector2 GetVar(string varName, Vector2 defaultValue)
@@ -172,7 +188,7 @@ namespace IOTLib
         /// <param name="varName">变量名</param>
         /// <param name="value">实例类型</param>
         /// <returns>成功返回True</returns>
-        public static bool GetVar<T>(string varName, out T? value)
+        public static bool GetObject<T>(string varName, out T? value)
         {
             value = default(T);
 
@@ -183,7 +199,13 @@ namespace IOTLib
 
             try
             {
-                value = JsonConvert.DeserializeObject<T>(text);
+                if(typeof(T) == typeof(string))
+                {
+                    var strValue = Convert.ToString(text);
+                    value = (T)(object)strValue;
+                }
+                else
+                    value = JsonConvert.DeserializeObject<T>(text);
 
                 return true;
             }
@@ -332,14 +354,14 @@ namespace IOTLib
         {
             var sql = @"INSERT INTO vars VALUES($key,$value) ON CONFLICT(key) DO UPDATE SET value=$value";
 
-            using (var sqlcmd = new SQLiteCommand())
+            using (var sqlcmd = new SqliteCommand())
             {
                 sqlcmd.CommandText = sql;
 
-                var key_arg = new SQLiteParameter("$key", System.Data.DbType.AnsiString);
+                var key_arg = new SqliteParameter("$key", System.Data.DbType.AnsiString);
                 key_arg.Value = key;
 
-                var value_arg = new SQLiteParameter("$value", System.Data.DbType.String);
+                var value_arg = new SqliteParameter("$value", System.Data.DbType.String);
                 value_arg.Value = value.ToString();
 
                 sqlcmd.Parameters.Add(key_arg);
@@ -347,6 +369,13 @@ namespace IOTLib
 
                 Sqlite3.Excute(sqlcmd);
             }
+        }
+
+        public static void SetValue(string key, Texture2D texture)
+        {
+            Assert.IsNotNull(texture, "非法值无法存储");
+         
+            SetValue(key, texture.GetRawTextureData());
         }
 
         public static void SetValue(string key, System.Object obj)
@@ -374,7 +403,7 @@ namespace IOTLib
 
             var findVarSel = $"select data from points where name=@name";
 
-            var sp = new SQLiteParameter("@name", System.Data.DbType.AnsiString);
+            var sp = new SqliteParameter("@name", System.Data.DbType.AnsiString);
             sp.Value = name;
 
             if (Sqlite3.QuerySingleValue(findVarSel, out var data, sp))
@@ -399,7 +428,7 @@ namespace IOTLib
 
             var findVarSel = $"select id from points where name=@name";
 
-            var sp = new SQLiteParameter("@name", System.Data.DbType.AnsiString);
+            var sp = new SqliteParameter("@name", System.Data.DbType.AnsiString);
             sp.Value = name;
 
             if (Sqlite3.QuerySingleValue(findVarSel, out var data, sp))

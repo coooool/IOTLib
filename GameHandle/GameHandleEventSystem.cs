@@ -16,12 +16,43 @@ public class GameHandleEventSystem
         public UnityAction<IFlow> TriggerCallBack;
     }
 
+    private static Dictionary<string,UnityEvent<string, KeyValuePairs?>> OnTriggerEvent = new ();
+
     /// <summary>
     /// 任务列表
     /// </summary>
     //private static Queue<EventNode> _eventList = new(8);
 
     private static object _lock = new object();
+
+    public static void RegisterTriggerEventListener(string eventName, UnityAction<string,KeyValuePairs?> action)
+    {
+        if(OnTriggerEvent.ContainsKey(eventName))
+        {
+            var ue = OnTriggerEvent[eventName];
+            ue.AddListener(action);
+        }
+        else
+        {
+            var ue = new UnityEvent<string,KeyValuePairs?>();
+            ue.AddListener(action);
+            OnTriggerEvent.Add(eventName, ue);
+        }
+    }
+
+    public static void RemoveTriggerEventListener(string eventName, UnityAction<string, KeyValuePairs?> action)
+    {
+        if (OnTriggerEvent.ContainsKey(eventName))
+        {
+            var ue = OnTriggerEvent[eventName];
+            ue.RemoveListener(action);
+
+            if (ue.GetPersistentEventCount() == 0)
+            {
+                OnTriggerEvent.Remove(eventName);
+            }
+        }
+    }
 
     /// <summary>
     /// 触发一个作业事件, 在LastUpdate之前调用都会在本帧进行分支操作。
@@ -39,6 +70,11 @@ public class GameHandleEventSystem
             {
                 Debug.LogWarning($"发送 [{eventName}] 事件失败，目标为NULL");
                 return;
+            }
+
+            if (OnTriggerEvent.TryGetValue(eventName, out var ue))
+            {
+                ue.Invoke(eventName, flowArgs);
             }
 
             MonoEventExecute.Execute<IGraphEventListen>(graph_target, null, (x, y) =>

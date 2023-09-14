@@ -1,12 +1,9 @@
 ﻿using System;
 using UMOD;
 using UnityEngine;
-using System.Data.SQLite;
 using System.IO;
-using System.Data.Common;
-using System.Data;
-using System.Collections.Generic;
 using IOTLib.Configure.ValueFactory;
+using Mono.Data.Sqlite;
 
 namespace IOTLib
 {
@@ -18,9 +15,9 @@ namespace IOTLib
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public class Sqlite3System : BaseSystem
     {
-        private SQLiteConnection m_Connection;
+        private static SqliteConnection m_Connection;
 
-        public SQLiteConnection Connection => m_Connection;
+        public SqliteConnection Connection => m_Connection;
 
         public UnityEngine.Events.UnityEvent<Sqlite3System> InitDBCallBack = new();
 
@@ -40,16 +37,19 @@ namespace IOTLib
 
             if (!File.Exists(baseSqlFilePath))
             {
-                SQLiteConnection.CreateFile(baseSqlFilePath);
+                SqliteConnection.CreateFile(baseSqlFilePath);
             }
 
-            m_Connection = new SQLiteConnection();
-            SQLiteConnectionStringBuilder connstr = new SQLiteConnectionStringBuilder();
-            connstr.DataSource = baseSqlFilePath;
+            if (m_Connection == null)
+            {
+                m_Connection = new SqliteConnection();
+                SqliteConnectionStringBuilder connstr = new SqliteConnectionStringBuilder();
+                connstr.DataSource = baseSqlFilePath;
 
-            m_Connection.ConnectionString = connstr.ToString();
+                m_Connection.ConnectionString = connstr.ToString();
 
-            m_Connection.Open();
+                m_Connection.Open();
+            }
 
             InitDBIfNeed();
             RegisterValueFactory();
@@ -108,13 +108,13 @@ namespace IOTLib
         /// </summary>
         /// <param name="sql">SQL</param>
         /// <param name="rowDataCallback">每行回调，通过x['字段名']拿到列数据</param>
-        public void Query(string sql, Action<SQLiteDataReader> rowDataCallback)
+        public void Query(string sql, Action<SqliteDataReader> rowDataCallback)
         {
-            using (var cmd = new SQLiteCommand(m_Connection))
+            using (var cmd = new SqliteCommand(m_Connection))
             {
                 cmd.CommandText = sql;
 
-                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                using (SqliteDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
@@ -124,15 +124,15 @@ namespace IOTLib
             }
         }
 
-        public void Query(string sql, System.Action<SQLiteCommand> bindArgs, Action<SQLiteDataReader> rowDataCallback)
+        public void Query(string sql, System.Action<SqliteCommand> bindArgs, Action<SqliteDataReader> rowDataCallback)
         {
-            using (var cmd = new SQLiteCommand(m_Connection))
+            using (var cmd = new SqliteCommand(m_Connection))
             {
                 cmd.CommandText = sql;
 
                 bindArgs?.Invoke(cmd);
 
-                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                using (SqliteDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
@@ -149,11 +149,11 @@ namespace IOTLib
         /// <param name="args">参数</param>
         /// <param name="valStr">找到的值</param>
         /// <returns>找到True</returns>
-        public bool QuerySingleValue(string sql, out string valStr, params SQLiteParameter[] args)
+        public bool QuerySingleValue(string sql, out string valStr, params SqliteParameter[] args)
         {
             valStr = string.Empty;
 
-            using (var cmd = new SQLiteCommand(m_Connection))
+            using (var cmd = new SqliteCommand(m_Connection))
             {
                 cmd.CommandText = sql;
 
@@ -162,7 +162,7 @@ namespace IOTLib
                     cmd.Parameters.AddRange(args);
                 }
 
-                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                using (SqliteDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
@@ -183,14 +183,14 @@ namespace IOTLib
         /// <returns>影响的行数或列表</returns>
         public int Excute(string sql)
         {
-            using (var cmd = new SQLiteCommand(m_Connection))
+            using (var cmd = new SqliteCommand(m_Connection))
             {
                 cmd.CommandText = sql;
                 return cmd.ExecuteNonQuery();
             }
         }
 
-        public int Excute(SQLiteCommand sql)
+        public int Excute(SqliteCommand sql)
         {
             sql.Connection = m_Connection;
             return sql.ExecuteNonQuery();
@@ -198,11 +198,11 @@ namespace IOTLib
 
         public override void OnDrop()
         {
-            if(m_Connection != null)
-            {
-                m_Connection.Close();
-                m_Connection = null;
-            }
+            //if(m_Connection != null)
+            //{
+            //    m_Connection.Close();
+            //    m_Connection = null;
+            //}
 
             base.OnDrop();
         }

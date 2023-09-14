@@ -36,6 +36,10 @@ namespace IOTLib
         private double m_latHeight;
         #endregion
 
+        // 当计算的位置无效时，显示在这个位置
+        public bool m_OpenIvalidPosReset = false;
+        public Vector3 m_InvalidPosition;
+
         public bool UpdateLntLatData()
         {
             if (string.IsNullOrEmpty(m_lnglatText))
@@ -97,28 +101,37 @@ namespace IOTLib
             var positionX = areaLeftDown.x + (virtualAreaToLBSAreaX * startY);
             var positionY = areaLeftDown.y + (virtualAreaToLBSAreaY * startX);
 
-            return new Vector3((float)positionX, 0, (float)positionY);
+            if(LayerUtility.GetGroundLayer(out var gLayout))
+            {
+                if(Physics.Raycast(
+                    new Vector3((float)positionX, 9999999, (float)positionY), 
+                    Vector3.down, 
+                    out var result, 
+                    Mathf.Infinity, 
+                    gLayout))
+                {
+                    return new Vector3((float)positionX, result.point.y, (float)positionY);
+                }
+                else
+                {
+                    Debug.LogWarning("转换坐标时无法发现地面");
 
-            //var scalex = 1 / m_lngWidth;
-            //var scaley = 1 / m_latHeight;
+                    if (m_OpenIvalidPosReset)
+                        return m_InvalidPosition;
+                }
+            }
 
-            //var UnityVirtualArea = new Bounds(transform.position, new Vector2(m_UnityModelScale, m_UnityModelScale));
+            var pos = new Vector3((float)positionX, 0, (float)positionY);
 
-            //var startX = lat - m_leftDownPoint.x;
-            //var startY = lng - m_leftDownPoint.y;
+            var test_area_pos = pos;
+            test_area_pos.y = UnityVirtualArea.center.y;
 
-            //var x = startX * scalex;
-            //var y = startY * scaley;
+            if (!m_OpenIvalidPosReset || UnityVirtualArea.Contains(test_area_pos))
+            {
+                return pos;
+            }
 
-            //////// 计算Area中心
-            //var areaCenter = UnityVirtualArea.center;
-            //////// Area左下角
-            //var areaLeftDown = new Vector2(areaCenter.x - UnityVirtualArea.size.x / 2, areaCenter.z - UnityVirtualArea.size.y / 2);
-
-            //var positionX = areaLeftDown.x + (m_UnityModelScale * y);
-            //var positionY = areaLeftDown.y + (m_UnityModelScale * x);
-
-            //return new Vector3((float)positionX, 0, (float)positionY);
+            return m_InvalidPosition;
         }
 
         /// <summary>

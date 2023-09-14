@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Networking;
 
 public struct KeyValuePairs
 {
@@ -27,8 +28,13 @@ public struct KeyValuePairs
     /// 从一个匿名对象创建键值对
     /// </summary>
     /// <param name="args"></param>
-    public KeyValuePairs(System.Object args)
+    public KeyValuePairs(System.Object args) : this(0)
     {
+        if (args == null)
+        {
+            return;
+        }
+
         var ty = args.GetType();
 
         var propers = ty.GetProperties();
@@ -39,12 +45,8 @@ public struct KeyValuePairs
 
             foreach (var a in propers)
             {
-                Push(new KeyValuePair<string, object>( a.Name, a.GetValue(args,null)));
+                Push(new KeyValuePair<string, object>(a.Name, a.GetValue(args,null)));
             }
-        }
-        else
-        {
-            kvps = null;
         }
     }
 

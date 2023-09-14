@@ -18,6 +18,26 @@ namespace IOTLib
         //private WeakReference<GameObject> LastObserverObject { get; set; } = new WeakReference<GameObject>(null);
         public const string TriggerEventName = "F聚集模式";
 
+        private Transform m_lookAt { get; set; }
+        private Vector3? m_lookAtV3 { get; set; }
+
+        private Vector3? LookAt
+        {
+            get
+            {
+                if(m_lookAt != null)
+                {
+                    return m_lookAt.position;
+                }
+                else if(m_lookAtV3 != null)
+                {
+                    return m_lookAtV3.Value;
+                }
+
+                return null;
+            }
+        }
+
         public PlayerModelF():base("F聚集物体模式")
         {
         }
@@ -51,9 +71,42 @@ namespace IOTLib
 
             newPos = CameraPhysics.CalculateCameraBestPoint(newPos);
 
-            var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position, Vector3.up);
-            seq.Join(camera.transform.DORotateQuaternion(rotatioin, .65f).SetEase(Ease.InOutQuad));
-            seq.Join(camera.transform.DOMove(newPos, .65f).SetEase(Ease.InOutQuad));
+            #region 处理距离过近的问题
+            var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position);
+
+            var changed = false;
+            var _lookAt = LookAt;
+
+            if (_lookAt.HasValue)
+            {
+                rotatioin = Quaternion.LookRotation(_lookAt.Value - camera.transform.position);
+
+                if (Vector3.Distance(rotatioin.eulerAngles, camera.transform.eulerAngles) > 0.1f)
+                {
+                    seq.Join(camera.transform.DODynamicLookAt(_lookAt.Value, .65f).SetEase(Ease.InOutQuad));
+                    changed = true;
+                }
+            }
+            else
+            {
+                if (Vector3.Distance(rotatioin.eulerAngles, camera.transform.eulerAngles) > 0.1f)
+                {
+                    seq.Join(camera.transform.DORotateQuaternion(rotatioin, .65f).SetEase(Ease.InOutQuad));
+                    changed = true;
+                }
+            }
+
+            if (Vector3.Distance(newPos, camera.transform.position) > 0.1f)
+            {
+                changed = true;
+                seq.Join(camera.transform.DOMove(newPos, .65f).SetEase(Ease.InOutQuad));
+            }
+
+            if(!changed)
+            {
+                seq.Complete();
+            }
+            #endregion
         }
 
         void FocusStyleB(Camera camera, Bounds? bounds, Sequence seq, Vector3 targetPos, IFlow flow, float virtualsphereRadius)
@@ -69,8 +122,34 @@ namespace IOTLib
             var newPos = direction * minD + moveToPos;
             newPos = CameraPhysics.CalculateCameraBestPoint(newPos);
 
-            seq.Join(camera.transform.DOMove(newPos, .65f).SetEase(Ease.InOutQuad));
-            seq.Join(camera.transform.DODynamicLookAt(targetPos, 0.65f).SetEase(Ease.InOutQuad));
+            #region 处理距离过近的问题
+            var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position);
+
+            var _lookAt = LookAt;
+            if (_lookAt.HasValue)
+            {
+                rotatioin = Quaternion.LookRotation(_lookAt.Value - camera.transform.position);
+            }
+
+            var changed = false;
+
+            if (Vector3.Distance(rotatioin.eulerAngles, camera.transform.eulerAngles) > 0.1f)
+            {
+                seq.Join(camera.transform.DODynamicLookAt(targetPos, 0.75f).SetEase(Ease.InOutQuad));
+                changed = true;
+            }
+
+            if (Vector3.Distance(newPos, camera.transform.position) > 0.1f)
+            {
+                changed = true; 
+                seq.Join(camera.transform.DOMove(newPos, .75f).SetEase(Ease.InOutQuad));
+            }
+
+            if (!changed)
+            {
+                seq.Complete();
+            }
+            #endregion
         }
 
         void FocusStyleC(Camera camera, Bounds? bounds, Sequence seq, Vector3 targetPos, IFlow flow, float virtualsphereRadius)
@@ -123,10 +202,34 @@ namespace IOTLib
 
             newPos = CameraPhysics.CalculateCameraBestPoint(newPos);
 
-            //var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position, Vector3.up);
-            //seq.Join(camera.transform.DORotateQuaternion(rotatioin, .65f).SetEase(Ease.InOutQuad));
-            seq.Join(camera.transform.DOMove(newPos, .95f).SetEase(Ease.InOutQuad));
-            seq.Join(camera.transform.DODynamicLookAt(targetPos, 0.95f).SetEase(Ease.InOutQuad));
+            #region 处理距离过近的问题
+            var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position);
+
+            var _lookAt = LookAt;
+            if (_lookAt.HasValue)
+            {
+                rotatioin = Quaternion.LookRotation(_lookAt.Value - camera.transform.position);
+            }
+
+            var changed = false;
+
+            if (Vector3.Distance(rotatioin.eulerAngles, camera.transform.eulerAngles) > 0.1f)
+            {
+                seq.Join(camera.transform.DODynamicLookAt(targetPos, 0.95f).SetEase(Ease.InOutQuad));
+                changed = true;
+            }
+
+            if (Vector3.Distance(newPos, camera.transform.position) > 0.1f)
+            {
+                changed = true;
+                seq.Join(camera.transform.DOMove(newPos, .95f).SetEase(Ease.InOutQuad));
+            }
+
+            if (!changed)
+            {
+                seq.Complete();
+            }
+            #endregion
         }
 
         /// <summary>
@@ -174,7 +277,14 @@ namespace IOTLib
                 Debug.LogError($"Model只支持A、B、C三种聚焦算法,您输入的是:{model}");
             }
 
-            seq.WithCancellation(DestroyOrExitStateCancelToken);
+            if (seq.IsActive() == true)
+            {
+                seq.WithCancellation(DestroyOrExitStateCancelToken);
+            }
+            else
+            {
+                return null;
+            }
 
             return seq;
         }
@@ -190,7 +300,15 @@ namespace IOTLib
 
             StateChangedEvent?.Invoke(true);
 
-            if(flow.Vars.IsDefined("TARGET"))
+            if (flow.Vars.IsDefined("LOOKATV3"))
+                m_lookAtV3 = flow.Vars.Get<Vector3>("LOOKATV3");
+            else m_lookAtV3 = null;
+
+            if (flow.Vars.IsDefined("LOOKAT"))
+                m_lookAt = flow.Vars.Get<Transform>("LOOKAT");
+            else m_lookAt = null;
+
+            if (flow.Vars.IsDefined("TARGET"))
             {
                 tweenCore = FocusOnGameObject(Camera.main, flow.Vars.Get<GameObject>("TARGET"), flow, radius);
             }
@@ -204,8 +322,14 @@ namespace IOTLib
                 throw new OperationCanceledException();
             }
 
-            if(tweenCore != null)
+            if (tweenCore != null)
+            {
                 tweenCore.OnComplete(() => Complete());
+            }
+            else
+            {
+                Complete();
+            }
 
             return base.Enter(flow);
         }

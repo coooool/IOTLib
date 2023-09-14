@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace IOTLib.PointSystem
+namespace IOTLib
 {
     public interface IPointPathProvider
     {

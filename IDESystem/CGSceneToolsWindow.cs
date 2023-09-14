@@ -56,7 +56,6 @@ namespace IOTLib
 
             foreach (var obj in allObject)
             {
-              
                 if (obj.HasTag(tag))
                 {
                     obj.gameObject.GetOrCreateCompoent<DragGameObject>();
@@ -136,7 +135,8 @@ namespace IOTLib
 
             //GUI.depth = 0;
 
-            m_DragWindowRect = GUI.Window(998, m_DragWindowRect, WindowFunc, "CG场景工具箱");
+            if(!CGUnityWindowManager.GSetting.NoHeader)
+                m_DragWindowRect = GUI.Window(998, m_DragWindowRect, WindowFunc, "CG场景工具箱");
 
             GUI.skin = null;
         }

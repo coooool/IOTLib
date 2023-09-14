@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Transactions;
 using UnityEngine;
 
 namespace IOTLib
@@ -63,6 +64,11 @@ namespace IOTLib
         public Vector3 XYZ()
         {
             return new Vector3(x, y, z);
+        }
+
+        public Vector3 PYR(Vector3 translation) 
+        {
+            return Quaternion.Euler(pitch, yaw, roll) * translation;
         }
 
         public void LerpTowards(CameraState target, float positionLerpPct, float rotationLerpPct)

@@ -28,7 +28,7 @@ namespace IOTLib
             }
             else
             {
-                target.Connect(url);
+                target._Connect(url);
             }
         }
 
@@ -47,7 +47,7 @@ namespace IOTLib
             }
             else
             {
-                target.CloseConnect();
+                target._CloseConnect();
             }
         }
 

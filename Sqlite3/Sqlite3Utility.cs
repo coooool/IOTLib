@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Mono.Data.Sqlite;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Data.SQLite;
 
 namespace IOTLib.Sqlite3
 {
@@ -14,9 +14,9 @@ namespace IOTLib.Sqlite3
         /// <param name="changedCallback">添加参数回调</param>
         /// <param name="connection">连接实例</param>
         /// <returns></returns>
-        public static bool ExecuteNoQuery(string sql, System.Action<SQLiteCommand> changedCallback, SQLiteConnection connection)
+        public static bool ExecuteNoQuery(string sql, System.Action<SqliteCommand> changedCallback, SqliteConnection connection)
         {
-            using(var cmd = new SQLiteCommand(sql, connection))
+            using(var cmd = new SqliteCommand(sql, connection))
             {
                 changedCallback?.Invoke(cmd);
                 return cmd.ExecuteNonQuery() > 0;

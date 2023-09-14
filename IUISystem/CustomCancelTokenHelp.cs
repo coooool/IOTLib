@@ -15,7 +15,7 @@ namespace IOTLib.IUISystem
         /// <param name="monoBehaviour"></param>
         /// <param name="token"></param>
         /// <returns>True表现成功</returns>
-        public static bool GetCustomCancelToken(this UnityEngine.Object unityObject, out CancellationToken token)
+        public static bool GetCustomCancelToken(this object unityObject, out CancellationToken token)
         {
             token = default;
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -26,5 +27,11 @@ namespace IOTLib
         /// </summary>
         /// <param name="request"></param>
         internal void SetRequestNodeData(ref EasyRequest request);
+
+        /// <summary>
+        /// 设置取消令牌
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        IRequestFactory SetCancellationToken(CancellationToken cancellationToken);
     }
 }

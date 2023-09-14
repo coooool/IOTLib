@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -70,6 +71,12 @@ namespace IOTLib
 
         }
 
+        //string EncodeUrl(string url)
+        //{
+        //    var u = new Uri(url);
+        //    return $"{u.GetLeftPart(UriPartial.Path)}{UnityWebRequest.EscapeURL(u.PathAndQuery)}";
+        //}
+
         protected HttpRequestBuild(string url) : this()
         {
             Url = url;
@@ -90,9 +97,10 @@ namespace IOTLib
         /// 设置生命周期
         /// </summary>
         /// <param name="cancellationToken">生命令牌</param>
-        public void SetCancellationToken(CancellationToken cancellationToken)
+        public IRequestFactory SetCancellationToken(CancellationToken cancellationToken)
         {
             CancellationToken = cancellationToken;
+            return this;
         }
 
         /// <summary>
@@ -129,13 +137,20 @@ namespace IOTLib
             };
         }
 
+        public static HttpRequestBuild Delete(string url)
+        {
+            return new HttpRequestBuild(url)
+            {
+                Method = "DELETE"
+            };
+        }
+
         public HttpRequestBuild SetContentType(string contentType)
         {
             if(!string.IsNullOrEmpty(contentType))
                 this.ContentType = contentType;
             return this;
         }
-
 
         public HttpRequestBuild SetUserAgent(string userAgent)
         {
@@ -219,13 +234,13 @@ namespace IOTLib
             {
                 case "POST":
                 case "PUT":
-                    if (string.IsNullOrEmpty(ContentType))
+                    if (string.IsNullOrEmpty(ContentType)==false)
                     {
                         request.SetRequestHeader("Content-Type", ContentType);
                     }
                     if(Content!= null && Content.Length > 0) {
                         request.uploadHandler = new UploadHandlerRaw(Content);
-                    }  
+                    }
                     break;
             }
 

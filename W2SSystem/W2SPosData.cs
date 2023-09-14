@@ -35,7 +35,7 @@ namespace IOTLib.UIPlus
         /// <summary>
         /// 根据这个位置进行转换
         /// </summary>
-        private Vector3 m_Position;
+        public Vector3 m_Position;
         
         /// <summary>
         /// 参考位置来源

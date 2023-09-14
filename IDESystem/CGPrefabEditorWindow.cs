@@ -184,7 +184,9 @@ namespace IOTLib
         void OnGUI()
         {
             GUI.skin = GUIStyle;
-            DragWindowRect = GUI.Window(0, DragWindowRect, TRSEditorWindow, SelectActiveGameObject == null ? "ÊôÐÔ±à¼­Æ÷" : SelectActiveGameObject.name);
+
+            if (!CGUnityWindowManager.GSetting.NoHeader)
+                DragWindowRect = GUI.Window(0, DragWindowRect, TRSEditorWindow, SelectActiveGameObject == null ? "ÊôÐÔ±à¼­Æ÷" : SelectActiveGameObject.name);
 
             // F¼ü¾Û½¹
             if (SelectActiveGameObject != null && Event.current.type == EventType.KeyUp)

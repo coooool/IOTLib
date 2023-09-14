@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using IOTLib;
+using IOTLib.IDESystem;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace IOTLib
     public class CGUnityWindowManager : MonoBehaviour
     {
         static CGUnityWindowManager Instance;
+
+        internal static EditorSetting GSetting;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void InitEditorWindow()
@@ -34,12 +37,11 @@ namespace IOTLib
         {
             if (Instance.TryGetComponent<CGPrefabEditorWindow>(out var cgpew))
             {
-                foreach (var a in TagSystem.Find<ExportCGPrefab>(true, CGResources.TAGName))
+                foreach (var a in TagSystem.Find<DragGameObject>(true, CGResources.TAGName))
                 {
                     a.SendMessage("OnSceneEditorStateNotify", false, SendMessageOptions.DontRequireReceiver);
 
-                    if (a.TryGetComponent<DragGameObject>(out var b))
-                        Destroy(b);
+                    Destroy(a);
                 }
 
                 Destroy(Instance.GetComponent<CGPrefabWindow>());
@@ -67,6 +69,12 @@ namespace IOTLib
                     a.SendMessage("OnSceneEditorStateNotify", true, SendMessageOptions.DontRequireReceiver);
                 }
             }
+        }
+
+        public static void Show(EditorSetting setting, params string[] tagTypes)
+        {
+            GSetting = setting;
+            Show(tagTypes);
         }
 
         public static void Toggle()

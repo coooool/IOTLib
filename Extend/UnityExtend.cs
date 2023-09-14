@@ -146,7 +146,6 @@ public static class UnityExtend
     }
     #endregion
 
-
     #region GameHandle
     public static UniTask SetSafeDestory(this Tween tween, IFlowStateGraph graph)
     {
@@ -189,6 +188,21 @@ public static class UnityExtend
         }
 
         return target.AddComponent<T>();
+    }
+
+    public static bool SafeRemoveCompoent<T>(this Component target) where T : Component
+    {
+        return SafeRemoveCompoent<T>(target.gameObject);
+    }
+    public static bool SafeRemoveCompoent<T>(this GameObject target) where T : Component
+    {
+        if (target.TryGetComponent<T>(out var c))
+        {
+            Object.Destroy(c);
+            return true;
+        }
+
+        return false;
     }
     #endregion
 
@@ -253,6 +267,20 @@ public static class UnityExtend
         }
 
         return result;
+    }
+    #endregion
+
+    #region CGScene
+    public static void AllowCGEditor(this GameObject gameObject)
+    {
+        gameObject.AddTag(CGResources.TAGName);
+        gameObject.GetOrCreateCompoent<DragGameObject>();
+    }
+
+    public static void DisableCGEditor(this GameObject gameObject)
+    {
+        gameObject.RemoveTag(CGResources.TAGName);
+        gameObject.SafeRemoveCompoent<DragGameObject>();
     }
     #endregion
 }

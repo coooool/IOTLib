@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Text;
+﻿using Mono.Data.Sqlite;
+using System;
 using UnityEngine;
 
 namespace IOTLib.SaveDB.Interceptor
@@ -24,7 +22,7 @@ namespace IOTLib.SaveDB.Interceptor
 
                 DBServer.Sqlite3.Query(sql, (cmd) =>
                 {
-                    var burl = new SQLiteParameter("name", System.Data.DbType.AnsiString);
+                    var burl = new SqliteParameter("name", System.Data.DbType.AnsiString);
                     burl.Value = request_name;
 
                     cmd.Parameters.Add(burl);

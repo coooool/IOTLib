@@ -18,6 +18,7 @@ namespace IOTLib
         protected string RequestName { get; set; }
         protected KeyValuePairs? Parameter { get; set; } = null;
         protected string? Body { get; set; } = null;
+        protected string? ContentType { get; set; }
 
         public ConfigHttpBuild(string name)
         {
@@ -55,9 +56,20 @@ namespace IOTLib
         /// 设置请求体,会从SetParameter中的源数据进行数据填充
         /// </summary>
         /// <param name="data"></param>
-        public void SetBody(string data)
+        public ConfigHttpBuild SetBody(string data)
         {
             Body = data;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置请求数据类型
+        /// </summary>
+        /// <param name="type"></param>
+        public ConfigHttpBuild SetContentType(string type)
+        {
+            ContentType = type;
+            return this;
         }
 
         /// <summary>
@@ -65,7 +77,7 @@ namespace IOTLib
         /// </summary>
         /// <param name="data"></param>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public void SetBody(object data)
+        public ConfigHttpBuild SetBody(object data)
         {
             try
             {
@@ -76,6 +88,8 @@ namespace IOTLib
                 Debug.LogError($"设置Body失败：{ex.Message}");
                 throw new System.InvalidOperationException("设置Body失败");
             }
+
+            return this;
         }
 
         public UnityWebRequest CreateRequest()
@@ -100,9 +114,14 @@ namespace IOTLib
             // 设置了自定义的Body
             if (!string.IsNullOrEmpty(Body))
             {
-                string tmpBody = Body;
-                ApiMap.ParseUrlParameter(ref tmpBody, this.Parameter, null);
-                httpBuild.SetBody(tmpBody);
+                //string tmpBody = Body;
+                //ApiMap.ParseUrlParameter(ref tmpBody, this.Parameter, null);
+                httpBuild.SetBody(Body);
+            }
+
+            if(string.IsNullOrEmpty(ContentType) == false)
+            {
+                httpBuild.SetContentType(ContentType);
             }
 
             return httpBuild.Build();
@@ -117,6 +136,12 @@ namespace IOTLib
         public string GetRequestName()
         {
             return RequestName;
+        }
+
+        public IRequestFactory SetCancellationToken(CancellationToken cancellationToken)
+        {
+            CancellationToken = cancellationToken;
+            return this;
         }
     }
 }
