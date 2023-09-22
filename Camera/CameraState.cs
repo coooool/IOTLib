@@ -61,6 +61,16 @@ namespace IOTLib
             //y = Mathf.Max(y, 4.0f, y);
         }
 
+        public void AroundTranslate(Vector3 translation)
+        {
+            x += translation.x;
+            y += translation.y;
+            z += translation.z;
+
+            // ÏÞÖÆY
+            //y = Mathf.Max(y, 4.0f, y);
+        }
+
         public Vector3 XYZ()
         {
             return new Vector3(x, y, z);
@@ -86,6 +96,16 @@ namespace IOTLib
         {
             t.eulerAngles = new Vector3(pitch, yaw, roll);
             t.position = new Vector3(x, y, z);
+        }
+
+        public void AroundUpdateTransform(Vector3? center, Transform t)
+        {
+            t.eulerAngles = new Vector3(pitch, yaw, roll);
+
+            if(center.HasValue)
+                t.position = center.Value + new Vector3(x, y, z);
+            else
+                t.position = new Vector3(x, y, z);
         }
 
         public override string ToString()

@@ -17,6 +17,8 @@ namespace IOTLib
     {
         public const string TriggerEventName = "FPS默认模式";
 
+        private static PlayerModelA _global_A = null;
+
         // 状态改变，True为进入，Exit为False
         public readonly static UnityEvent<bool> StateChangedEvent = new UnityEvent<bool>();
 
@@ -29,18 +31,21 @@ namespace IOTLib
 
         private Camera mainCamera;
 
-        private static PlayerModelA _global_A = null;
+        private AroundCamera m_AroundCamera = new ();
 
         public PlayerModelA() : base("播放模式A")
         {
             _global_A = this;
         }
 
+        // 进入状态会调用这个方法初始化一下依赖的数据
         void InitStartPos()
         {
             //初始化组件
             m_TargetCameraState.SetFromTransform(mainCamera.transform);
             m_InterpolatingCameraState.SetFromTransform(m_TargetCameraState);
+
+            m_AroundCamera.Init();
         }
 
         /// <summary>
@@ -49,8 +54,17 @@ namespace IOTLib
         /// <param name="pos"></param>
         public void SetCustomPos(Vector3 pos)
         {
-            m_TargetCameraState.SetPos(pos);
-            m_InterpolatingCameraState.SetPos(pos);
+            switch (CameraControlSetting.Setting.PlayerMethod)
+            {
+                case CameraControlSetting.CameraControlMethod.FPS:
+                    m_TargetCameraState.SetPos(pos);
+                    m_InterpolatingCameraState.SetPos(pos);
+                    break;
+
+                case CameraControlSetting.CameraControlMethod.Map:
+                    m_AroundCamera.SetCustomPos(pos);
+                    break;
+            } 
         }
 
         /// <summary>
@@ -59,8 +73,17 @@ namespace IOTLib
         /// <param name="angles"></param>
         public void SetCustomEulerAngles(Vector3 angles)
         {
-            m_TargetCameraState.SetAngles(angles);
-            m_InterpolatingCameraState.SetAngles(angles);
+            switch (CameraControlSetting.Setting.PlayerMethod)
+            {
+                case CameraControlSetting.CameraControlMethod.FPS:
+                    m_TargetCameraState.SetAngles(angles);
+                    m_InterpolatingCameraState.SetAngles(angles);
+                    break;
+
+                case CameraControlSetting.CameraControlMethod.Map:
+                    m_AroundCamera.SetCustomEulerAngles(angles);
+                    break;
+            }
         }
 
         /// <summary>
@@ -311,11 +334,18 @@ namespace IOTLib
             {
                 cancellation.ThrowIfCancellationRequested();
 
-                await UniTask.Yield(PlayerLoopTiming.Update);
+                switch(CameraControlSetting.Setting.PlayerMethod)
+                {
+                    case CameraControlSetting.CameraControlMethod.FPS:
+                        await UniTask.Yield(PlayerLoopTiming.Update);
+                        Move();
+                        break;
 
-                cancellation.ThrowIfCancellationRequested();
-
-                Move();
+                    case CameraControlSetting.CameraControlMethod.Map:
+                        await UniTask.Yield(PlayerLoopTiming.Update);
+                        m_AroundCamera.Update();
+                        break;
+                }   
             }
         }
 
@@ -343,25 +373,29 @@ namespace IOTLib
             return base.Exit(flow);
         }
 
-        public override UniTask Update(IFlow flow)
-        {
-            return base.Update(flow);
-        }
-
         /// <summary>
         /// 手动刷新像机控制方法
         /// </summary>
         public static void ManualUpdate()
         {
-            _global_A.Move();
+            switch (CameraControlSetting.Setting.PlayerMethod)
+            {
+                case CameraControlSetting.CameraControlMethod.FPS:
+                    _global_A.Move();
+                    break;
+
+                case CameraControlSetting.CameraControlMethod.Map:
+                    _global_A.m_AroundCamera.Update();
+                    break;
+            }
         }
 
         /// <summary>
         /// 复位一次状态
         /// </summary>
-        public static void ResetState()
-        {
-            _global_A.InitStartPos();
-        }
+        //public static void ResetState()
+        //{
+        //    _global_A.InitStartPos();
+        //}
     }
 }

@@ -8,6 +8,12 @@ namespace IOTLib
     [CreateAssetMenu(fileName = ResourceFileName, menuName = "ZN/Camera控制参数")]
     public class CameraControlSetting : ScriptableObject
     {
+        public enum CameraControlMethod
+        {
+            Map,
+            FPS,
+        }
+
         private static CameraControlSetting m_setting = null;
         public static CameraControlSetting Setting
         {
@@ -25,10 +31,24 @@ namespace IOTLib
 
         public const string ResourceFileName = "CameraControlSetting";
 
-        [Header("移动")]
+        [Header("摄像机控制模式")]
+        public CameraControlMethod PlayerMethod = CameraControlMethod.Map;
+
+        [Header("移动阻尼")]
         [Tooltip("移动时的指数提升系数")]
         public float boost = 3.5f;
 
+        [Header("旋转速度")]
+        public float mousePointSensitivity = 3.5f;
+
+        [Header("平移速度")]
+        public float mouseTranslationSensitivity = 3.5f;
+
+        [Header("滚轮速度")]
+        public float mouseWheelSensitivity = 3.5f;
+        public AnimationCurve MouseWhellCurve = new AnimationCurve(new Keyframe(0f, 0.0f, 0f, 5f), new Keyframe(10f, 10f, 0f, 0f));
+
+   
         [Header("移动设置")]
         [Tooltip("将相机位置插补到目标位置99%所需的时间。"), Range(0.001f, 1f)]
         public float positionLerpTime = 0.15f;
@@ -42,6 +62,9 @@ namespace IOTLib
 
         [Tooltip("是否将鼠标输入的Y轴反转为旋转。")]
         public bool invertY = false;
+
+        [Header("Map世界中心")]
+        public Vector3 MapControlInitWorldCenter;
 
         // 碰撞层
         public LayerMask m_LayerMask = ~0;
@@ -57,7 +80,9 @@ namespace IOTLib
 
         [Header("动态因子")]
         public bool UseDynamicBoost = false;
+        public float DBoostScale = 100.0f;
         public AnimationCurve DynamicBoostCurve = new AnimationCurve(new Keyframe(0f, 0.0f, 0f, 5f), new Keyframe(10f, 10f, 0f, 0f));
+
 
         [Header("F聚焦物体时离地面最小距离")]
         public float FObjectMinGroundDistance = 20;

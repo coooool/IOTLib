@@ -91,5 +91,60 @@ namespace IOTLib
 
             return world_pos;
         }
+
+        /// <summary>
+        /// 获取一个摄像机注视的前方点在地面上的位置
+        /// </summary>
+        /// <param name="camera"></param>
+        /// <returns></returns>
+        public static bool GetLookAtGroundPoint(this Camera camera, out Vector3 result)
+        {
+            result = camera.transform.position;
+
+            if (LayerUtility.GetGroundLayer(out var ground_layer))
+            {
+                var center_screen_point = camera.ViewportToScreenPoint(new Vector2(.5f, .5f));
+                var ray = camera.ScreenPointToRay(center_screen_point);
+
+                if (Physics.Raycast(ray, out var rayInfo, Mathf.Infinity, ground_layer))
+                {
+                    result = rayInfo.point;
+
+                    return true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("当前场景中似乎不存在地面");
+            }
+
+            return false;
+        }
+
+        public static bool GetLookAtGroundPoint(this Vector3 point, out Vector3 result)
+        {
+            result = point;
+
+            if (LayerUtility.GetGroundLayer(out var ground_layer))
+            {
+                var view_point = Camera.main.WorldToViewportPoint(point);
+                var center_screen_point = Camera.main.ViewportToScreenPoint(view_point);
+
+                var ray = Camera.main.ScreenPointToRay(center_screen_point);
+
+                if (Physics.Raycast(ray, out var rayInfo, Mathf.Infinity, ground_layer))
+                {
+                    result = rayInfo.point;
+
+                    return true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("当前场景中似乎不存在地面");
+            }
+
+            return false;
+        }
     }
 }
