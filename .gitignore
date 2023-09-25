@@ -22,10 +22,7 @@ logs
 .gradle
 ExportedObj
 .consulo
-*.csproj
 *.unityproj
-*.sln
-*.suo
 *.tmp
 *.user
 *.userprefs
