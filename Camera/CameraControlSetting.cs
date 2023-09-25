@@ -48,6 +48,8 @@ namespace IOTLib
         public float mouseWheelSensitivity = 3.5f;
         public AnimationCurve MouseWhellCurve = new AnimationCurve(new Keyframe(0f, 0.0f, 0f, 5f), new Keyframe(10f, 10f, 0f, 0f));
 
+        public bool LimitMapArea = false;
+        public Vector2 LimitHeight = Vector2.zero;
    
         [Header("移动设置")]
         [Tooltip("将相机位置插补到目标位置99%所需的时间。"), Range(0.001f, 1f)]

@@ -163,7 +163,9 @@ namespace IOTLib
             }
 
             TargetDistance -= Input.GetAxis("Mouse ScrollWheel") * CameraControlSetting.Setting.mouseWheelSensitivity * m_WhellBoost;
-            //TargetDistance = Mathf.Clamp(targetDistance, distanceRange.x, distanceRange.y);
+            
+			if(CameraControlSetting.Setting.LimitMapArea)
+				TargetDistance = Mathf.Clamp(TargetDistance, CameraControlSetting.Setting.LimitHeight.x, CameraControlSetting.Setting.LimitHeight.y);
 
             CurrentAngles = Vector2.Lerp(CurrentAngles, TargetAngles, CameraControlSetting.Setting.boost * Time.deltaTime);
             CurrentDistance = Mathf.Lerp(CurrentDistance, TargetDistance, CameraControlSetting.Setting.boost * Time.deltaTime);
