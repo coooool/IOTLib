@@ -178,7 +178,7 @@ namespace IOTLib
 
                 var data = point!.ToAnonymousType(dataTmp);
 
-                var pos = data.euler.ToVector3();
+                var pos = data.pos.ToVector3();
                 var euler = data.euler.ToVector3();
 
                 return new Vector3[] {pos, euler};

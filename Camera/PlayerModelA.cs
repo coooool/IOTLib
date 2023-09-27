@@ -332,17 +332,17 @@ namespace IOTLib
         {
             while (!cancellation.IsCancellationRequested)
             {
-                cancellation.ThrowIfCancellationRequested();
+                await UniTask.Yield(PlayerLoopTiming.Update);
 
-                switch(CameraControlSetting.Setting.PlayerMethod)
+                cancellation.ThrowIfCancellationRequested();       
+
+                switch (CameraControlSetting.Setting.PlayerMethod)
                 {
-                    case CameraControlSetting.CameraControlMethod.FPS:
-                        await UniTask.Yield(PlayerLoopTiming.Update);
+                    case CameraControlSetting.CameraControlMethod.FPS:    
                         Move();
                         break;
 
                     case CameraControlSetting.CameraControlMethod.Map:
-                        await UniTask.Yield(PlayerLoopTiming.Update);
                         m_AroundCamera.Update();
                         break;
                 }   

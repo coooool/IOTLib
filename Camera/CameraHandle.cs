@@ -199,6 +199,12 @@ namespace IOTLib
             SetCurrentPosition(world_pos, null);   
         }
 
+        public static void SetCurrentPosition(string name)
+        {
+            var point = PointSystem.GetPosAndEulerAngle(name);
+            SetCurrentPosition(point[0], point[1]);
+        }
+
         public static void SetCurrentPosition(Vector3 world_pos, Vector3? eulerAngles)
         {
             var handle = GameHandleSystem.GetFlowGraphFromName(HandleName);

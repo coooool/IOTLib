@@ -81,7 +81,7 @@ namespace IOTLib
 		// 平移
 		void UpdateTranslate()
 		{
-            if (Input.GetMouseButton(1))
+            if (Input.GetMouseButton(0))
             {
                 float num = Input.GetAxis("Mouse X") * CameraControlSetting.Setting.mouseTranslationSensitivity * m_Boost;
                 float num2 = Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.mouseTranslationSensitivity * m_Boost;
@@ -100,32 +100,40 @@ namespace IOTLib
 		{
             var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseInDragWindow;
 
-            if (Input.GetMouseButtonDown(1))
+            if (Input.GetMouseButtonDown(0))
 			{
                 if (PointerOverGameObject)
                     return;
 
-                CurIsTranslate = true;
-                CurIsRotate = false;
+				if (!CurIsTranslate)
+				{
+					CurIsTranslate = true;
+					CurIsRotate = false;
 
-                Translate_CurrentOffset = Translate_TargetOffset = m_Camera.transform.position;
+					Translate_TargetOffset = Translate_CurrentOffset = m_Camera.transform.position;
+				}
             }
-			else if(Input.GetMouseButtonDown (0) || Input.mouseScrollDelta.y != 0)
+			else if(Input.GetMouseButtonDown (1) || Input.mouseScrollDelta.y != 0)
 			{
                 if (PointerOverGameObject)
                     return;
 
-                CurIsTranslate = false;
-                CurIsRotate = true;
+				if (!CurIsRotate)
+				{
+					CurIsTranslate = false;
+					CurIsRotate = true;
 
-				ClearARoundCameraData();
+					ClearARoundCameraData();
+				}
             }
 
             // 使用动态因子
             if (CameraControlSetting.Setting.UseDynamicBoost)
             {
                 m_Boost = CameraControlSetting.Setting.DynamicBoostCurve.Evaluate(Vector3.Distance(m_Camera.transform.position, target.position));
-                m_WhellBoost = CameraControlSetting.Setting.MouseWhellCurve.Evaluate(Vector3.Distance(m_Camera.transform.position, target.position));
+				m_WhellBoost = Vector3.Distance(m_Camera.transform.position, target.position) / CameraControlSetting.Setting.DBoostScale; //CameraControlSetting.Setting.MouseWhellCurve.Evaluate(Vector3.Distance(m_Camera.transform.position, target.position));
+				m_WhellBoost = CameraControlSetting.Setting.mouseWheelSensitivity * m_WhellBoost;
+
             }
 
             if (CurIsTranslate)
@@ -155,10 +163,10 @@ namespace IOTLib
 
         protected void UpdateAround()
 		{
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(1))
 			{
-                TargetAngles.y += Input.GetAxis("Mouse X") * CameraControlSetting.Setting.mousePointSensitivity * m_Boost;
-                TargetAngles.x -= Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.mousePointSensitivity * m_Boost;
+                TargetAngles.y += Input.GetAxis("Mouse X") * CameraControlSetting.Setting.mousePointSensitivity;
+                TargetAngles.x -= Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.mousePointSensitivity;
                 TargetAngles.x = Mathf.Clamp(TargetAngles.x, angleRange.x, angleRange.y);
             }
 
@@ -176,12 +184,16 @@ namespace IOTLib
 
         internal void SetCustomPos(Vector3 pos)
 		{
-			m_Camera.transform.position = pos;
+			CurIsTranslate = false;
+			CurrentDistance = TargetDistance;
+            m_Camera.transform.position = pos;
 		}
 
 		internal void SetCustomEulerAngles(Vector3 angles)
 		{
-			m_Camera.transform.eulerAngles = angles;
+			CurIsRotate = false;
+			CurrentAngles = TargetAngles = angles;
+            m_Camera.transform.eulerAngles = angles;
 		}
 	}
 }
