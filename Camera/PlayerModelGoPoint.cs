@@ -50,10 +50,18 @@ namespace IOTLib
 
         Tween GoPointFromPos(Vector3 pos, Vector3 euler, float time)
         {
+            var hasDis = Vector3.Distance(pos, Camera.main.transform.eulerAngles) > 0.1f ? true : false;    
+            var hasEluer = Vector3.Distance(euler, Camera.main.transform.eulerAngles) > 0.1f ? true: false;
+            
+            if(!hasDis && !hasEluer)
+            {
+                return null;
+            }
+            
             var seq = DOTween.Sequence();
 
-            seq.Join(UnityEngine.Camera.main.transform.DOMove(pos, time));
-            seq.Join(UnityEngine.Camera.main.transform.DORotate(euler, time));
+            seq.Join(Camera.main.transform.DOMove(pos, time));
+            seq.Join(Camera.main.transform.DORotate(euler, time));
 
             seq.SetEase(Ease.InCubic);
             seq.WithCancellation(DestroyOrExitStateCancelToken);
@@ -63,10 +71,18 @@ namespace IOTLib
 
         Tween GoPointFromPos(Vector3 pos, Quaternion rotation, float time)
         {
+            var hasDis = Vector3.Distance(pos, Camera.main.transform.eulerAngles) > 0.1f ? true : false;
+            var hasEluer = Vector3.Distance(rotation.eulerAngles, Camera.main.transform.eulerAngles) > 0.1f ? true : false;
+
+            if (!hasDis && !hasEluer)
+            {
+                return null;
+            }
+
             var seq = DOTween.Sequence();
 
-            seq.Join(UnityEngine.Camera.main.transform.DORotateQuaternion(rotation, time));
-            seq.Join(UnityEngine.Camera.main.transform.DOMove(pos, time));
+            seq.Join(Camera.main.transform.DORotateQuaternion(rotation, time));
+            seq.Join(Camera.main.transform.DOMove(pos, time));
 
             seq.SetEase(Ease.InCubic);
             seq.WithCancellation(DestroyOrExitStateCancelToken);
@@ -87,6 +103,7 @@ namespace IOTLib
                 time = timeval;
 
             flow.Vars.TryGet<Action>("COMPLETE", out Complete);
+
 
             if (flow.Vars.TryGet("NAME", out name))
             {
