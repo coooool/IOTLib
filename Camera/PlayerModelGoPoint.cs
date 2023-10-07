@@ -50,8 +50,8 @@ namespace IOTLib
 
         Tween GoPointFromPos(Vector3 pos, Vector3 euler, float time)
         {
-            var hasDis = Vector3.Distance(pos, Camera.main.transform.eulerAngles) > 0.1f ? true : false;    
-            var hasEluer = Vector3.Distance(euler, Camera.main.transform.eulerAngles) > 0.1f ? true: false;
+            var hasDis = Vector3.Distance(pos, Camera.main.transform.position) > 1f ? true : false;    
+            var hasEluer = Vector3.Distance(euler, Camera.main.transform.eulerAngles) > 1f ? true: false;
             
             if(!hasDis && !hasEluer)
             {
@@ -71,8 +71,8 @@ namespace IOTLib
 
         Tween GoPointFromPos(Vector3 pos, Quaternion rotation, float time)
         {
-            var hasDis = Vector3.Distance(pos, Camera.main.transform.eulerAngles) > 0.1f ? true : false;
-            var hasEluer = Vector3.Distance(rotation.eulerAngles, Camera.main.transform.eulerAngles) > 0.1f ? true : false;
+            var hasDis = Vector3.Distance(pos, Camera.main.transform.position) > 1f ? true : false;
+            var hasEluer = Vector3.Distance(rotation.eulerAngles, Camera.main.transform.eulerAngles) > 1f ? true : false;
 
             if (!hasDis && !hasEluer)
             {
@@ -134,6 +134,8 @@ namespace IOTLib
 
             if (tweenCore != null)
                 tweenCore.OnComplete(() => Complete());
+            else
+                Complete?.Invoke();
 
             return base.Enter(flow);
         }
