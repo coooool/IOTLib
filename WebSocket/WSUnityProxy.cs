@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UMOD;
 using UnityEngine;
 using WebSocketSharp;
@@ -61,6 +62,8 @@ namespace IOTLib
                 }
             }
 
+            Debug.Log(url);
+
             client = new WebSocket(url);
             client.OnOpen += _ConnectSuccess;
             client.OnMessage += _Message;
@@ -78,8 +81,6 @@ namespace IOTLib
                 {
                     client.Close(CloseStatusCode.Abnormal);
                 }
-
-                client = null;
             }
         }
 
@@ -130,7 +131,11 @@ namespace IOTLib
             // 断开链接
             _CloseConnect();
 
-            OnClose();
+            UniTask.Void(async () =>
+            {
+                await UniTask.SwitchToMainThread();
+                OnClose();
+            });
         }
 
         /// <summary>
@@ -144,11 +149,10 @@ namespace IOTLib
                 do
                 {
                     await UniTask.Delay(TimeSpan.FromSeconds(5), false, PlayerLoopTiming.Update, token);
-
                     switch(client.ReadyState)
                     {
                         case WebSocketState.Closed:
-                            _Connect(m_Url);
+                            OnRetryConnection();
                             break;
                     }
                 }
@@ -156,6 +160,14 @@ namespace IOTLib
             }, this.GetCancellationTokenOnDestroy());
         }
         
+        /// <summary>
+        /// 重连
+        /// </summary>
+        protected virtual void OnRetryConnection()
+        {
+            _Connect(m_Url);
+        }
+
         /// <summary>
         /// 开始发送健康心跳信息
         /// </summary>
@@ -172,10 +184,13 @@ namespace IOTLib
 
                     if (client != null && client.ReadyState == WebSocketState.Open)
                     {
-                        if(!client.Ping(m_HeartText))
-                        {
-                            Debug.LogWarning($"发送心跳包失败...!{m_Url}");
-                        }
+                        await UniTask.SwitchToTaskPool();
+
+                        client.Send(System.Text.Encoding.UTF8.GetBytes(m_HeartText));
+                        //if(!client.Ping(m_HeartText))
+                        //{
+                        //    Debug.LogWarning($"发送心跳包失败...!{m_Url}");
+                        //}
                     }                    
                 } while (!token.IsCancellationRequested);
             }, this.GetCancellationTokenOnDestroy());
