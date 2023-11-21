@@ -9,7 +9,7 @@ namespace IOTLib.Extend
     /// <summary>
     /// 计算包围体实用程序
     /// </summary>
-    public class BoundsUtility
+    public static class BoundsUtility
     {
         public static Bounds CalculateBound(IEnumerable<GameObject> points)
         {
@@ -117,7 +117,7 @@ namespace IOTLib.Extend
         /// </summary>
         /// <param name="gameObject"></param>
         /// <returns></returns>
-        public static Bounds GetBoundsWithChildren(GameObject gameObject)
+        public static Bounds GetBoundsWithChildren(this GameObject gameObject)
         {
             Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
 

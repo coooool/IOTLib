@@ -15,7 +15,6 @@ namespace IOTLib
         // 状态改变，True为进入，Exit为False
         public readonly static UnityEvent<bool> StateChangedEvent = new UnityEvent<bool>();
 
-        //private WeakReference<GameObject> LastObserverObject { get; set; } = new WeakReference<GameObject>(null);
         public const string TriggerEventName = "F聚集模式";
 
         private Transform m_lookAt { get; set; }
@@ -55,8 +54,11 @@ namespace IOTLib
             float virtualsphereRadius = Vector3.Magnitude(bounds.max - bounds.center) * marginPercentage;
 
             // 记录前向
-            flow.Vars.Set("Forward", focusedObject.transform.forward);
-            flow.Vars.Set("WorldLeftDirection", focusedObject.transform.TransformDirection(Vector3.left));
+            if(!flow.Vars.IsDefined("Forward"))
+                flow.Vars.Set("Forward", focusedObject.transform.forward);
+
+            if (!flow.Vars.IsDefined("WorldLeftDirection"))
+                flow.Vars.Set("WorldLeftDirection", focusedObject.transform.TransformDirection(Vector3.left));
 
             return FocusOnPosition(camera, bounds, focusedObject.transform.position, flow, virtualsphereRadius);
         }
@@ -200,7 +202,10 @@ namespace IOTLib
 
             var newPos = fortyFiveDegVector * minD + targetPos;
 
-            newPos = CameraPhysics.CalculateCameraBestPoint(newPos);
+            if(!flow.Vars.IsDefined("NO_BEST_POINT"))
+            {
+                newPos = CameraPhysics.CalculateCameraBestPoint(newPos);
+            }
 
             #region 处理距离过近的问题
             var rotatioin = Quaternion.LookRotation(targetPos - camera.transform.position);
@@ -248,6 +253,13 @@ namespace IOTLib
 
             var seq = DOTween.Sequence();
 
+            // D2使用在编辑器中
+            if(model == "D2")
+            {
+                model = "D";
+                flow.Vars.Set("NO_BEST_POINT", true);
+            }
+
             if (model == "A")
             {
                 FocusStyleA(camera, seq, targetPos, flow, virtualsphereRadius);
@@ -260,7 +272,7 @@ namespace IOTLib
             {
                 FocusStyleC(camera, bounds, seq, targetPos, flow, virtualsphereRadius);
             }
-            else if (model == "D")
+            else if (model == "D" || model == "D2")
             {
                 if (bounds.HasValue)
                 {

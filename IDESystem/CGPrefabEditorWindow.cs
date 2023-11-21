@@ -1,4 +1,5 @@
 using IOTLib.IDESystem.Handles;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,6 +32,7 @@ namespace IOTLib
         #endregion
 
         #region PROPERTY
+        static bool Is2DEditor = false;
         internal static List<VarGroup>? m_EditVars = null;
         static List<VarGroup> EditVars
         {
@@ -54,6 +56,7 @@ namespace IOTLib
             }
         }
 
+        static WeakReference<ExportCGPrefab> _activeCgPrefab = new WeakReference<ExportCGPrefab>(null);
         static WeakReference<GameObject> _activeGameObject = new WeakReference<GameObject>(null);      
         public static Transform SelectActiveTransform
         {
@@ -67,6 +70,27 @@ namespace IOTLib
             set
             {
                 SelectActiveGameObject = value.gameObject;
+            }
+        }
+
+        public static ExportCGPrefab SelectActiveCGPrefab
+        {
+            get
+            {
+                if (_activeCgPrefab.TryGetTarget(out var g))
+                    return g;
+
+                return null;
+            }
+
+            set
+            {
+                if (_activeCgPrefab.TryGetTarget(out var o))
+                {
+                    if (o == value) return;
+                }
+
+                _activeCgPrefab.SetTarget(value);
             }
         }
 
@@ -111,19 +135,30 @@ namespace IOTLib
 
         static void InitFields()
         {
+            Is2DEditor = false;
+            SelectActiveCGPrefab = null;
             EditVars.Clear();
+
             if(SelectActiveGameObject != null)
             {
+                // 处理Prefab 项
+                if (SelectActiveGameObject.TryGetComponent<ExportCGPrefab>(out var cg))
+                {
+                    SelectActiveCGPrefab = cg;
+                    Is2DEditor = cg.IsUGUI;
+                }
+                // ---------
+
                 CGPrefabPropertyDrawUtility.GetFields(SelectActiveGameObject, (a) =>
                 {
                     EditVars.Add(a);
                 });
-            }    
+            }
         }
 
         private void Start()
         {
-            DragWindowRect.Set(Screen.width - (WINDOW_WIDTH + 30), 80, WINDOW_WIDTH, Mathf.RoundToInt(Screen.height * 0.60f));
+            DragWindowRect.Set(Screen.width - (WINDOW_WIDTH + 30), 80, WINDOW_WIDTH, Mathf.RoundToInt(Screen.height * 0.70f));
             GetComponent<CGHandleDragMouse>().RegisterDragPerformEvent(this);
         }
 
@@ -140,13 +175,23 @@ namespace IOTLib
                 SelectActiveGameObject.name = GUILayout.TextField(SelectActiveGameObject.name);
 
                 GUILayout.Label("位置");
-                m_t_str = GUILayout.TextField(SelectActiveTransform.position.ToOriginStr());
-
+                if(Is2DEditor)
+                {
+                    m_t_str = GUILayout.TextField(SelectActiveCGPrefab.UIRecttransform.anchoredPosition.ToOriginStr());
+                }
+                else
+                {
+                    m_t_str = GUILayout.TextField(SelectActiveTransform.position.ToOriginStr());
+                }
+               
                 GUILayout.Label("旋转(欧拉角XYZ)");
                 m_r_str = GUILayout.TextField(SelectActiveTransform.eulerAngles.ToOriginStr());
 
                 GUILayout.Label("缩放");
-                m_s_str = GUILayout.TextField(SelectActiveTransform.localScale.ToOriginStr());
+                if(Is2DEditor)
+                    m_s_str = GUILayout.TextField(SelectActiveCGPrefab.UIRecttransform.sizeDelta.ToOriginStr());
+                else
+                    m_s_str = GUILayout.TextField(SelectActiveTransform.localScale.ToOriginStr());
 
                 if (GUILayout.Button("删除物体"))
                 {
@@ -159,9 +204,31 @@ namespace IOTLib
                 {
                     try
                     {
-                        SelectActiveTransform.position = m_t_str.ToVector3();
+                        if (Is2DEditor)
+                        {
+                            SelectActiveCGPrefab.UIRecttransform.anchoredPosition = m_t_str.ToVector2();
+                            SelectActiveTransform.position = SelectActiveCGPrefab.UIRecttransform.position;
+                            
+                            // 保存为保存系统使用的是3D映射物体。所以需要放回去
+                            SelectActiveCGPrefab.UIRecttransform.sizeDelta = m_s_str.ToVector2();
+                            SelectActiveTransform.localScale = SelectActiveCGPrefab.UIRecttransform.sizeDelta;
+                            
+                            if (SelectActiveCGPrefab.TryGetComponent<DragGameObject2D>(out var dgo))
+                                dgo.UpdateEditPos();
+                        }
+                        else
+                        {
+                            SelectActiveTransform.position = m_t_str.ToVector3();
+                            SelectActiveTransform.localScale = m_s_str.ToVector3();
+                        }
+                       
                         SelectActiveTransform.eulerAngles = m_r_str.ToVector3();
-                        SelectActiveTransform.localScale = m_s_str.ToVector3();
+
+                        // 通知值更新
+                        SelectActiveTransform.SendMessage(
+                            nameof(IDEPropertyEvent.OnTransformUpdate), 
+                            SelectActiveTransform,
+                            SendMessageOptions.DontRequireReceiver);
                     }
                     catch (Exception)
                     {
@@ -177,8 +244,7 @@ namespace IOTLib
                     CGPrefabPropertyDrawUtility.DrawVarGroup(EditVars);
             }
 
-            if (Event.current.mousePosition.y < 26)
-                GUI.DragWindow(new Rect(0,0, Screen.width, Screen.height));
+            GUI.DragWindow(new Rect(0,0, Screen.width, 30));
         }
 
         void OnGUI()
@@ -191,9 +257,12 @@ namespace IOTLib
             // F键聚焦
             if (SelectActiveGameObject != null && Event.current.type == EventType.KeyUp)
             {
-                if (Event.current.keyCode == KeyCode.F)
+                if (!SelectActiveCGPrefab.IsUGUI)
                 {
-                    CameraHandle.F(SelectActiveGameObject, null, "D");
+                    if (Event.current.keyCode == KeyCode.F)
+                    {
+                        CameraHandle.F(SelectActiveGameObject, () => CameraHelpFunc.ToObserver(SelectActiveGameObject), "D2");
+                    }
                 }
             }
         }

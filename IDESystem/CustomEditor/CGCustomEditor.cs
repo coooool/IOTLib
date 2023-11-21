@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace IOTLib
 {
-    public abstract class CGCustomEditor : ICGCustomEditor
+    public abstract class CGCustomEditor : ICGCustomEditor, IComponentPropertyUpdate
     {
         public Component target { get; internal set; }
 
@@ -25,5 +25,13 @@ namespace IOTLib
         }
 
         public virtual void OnDestroy() { }
+
+        /// <summary>
+        /// 值发生更新
+        /// </summary>
+        public virtual void OnCGFieldUpdate()
+        {
+        
+        }
     }
 }

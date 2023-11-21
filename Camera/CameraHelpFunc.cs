@@ -14,9 +14,13 @@ namespace IOTLib
         /// 到观察都模式，该模型通常来自F模式，之后再进入此模式
         /// </summary>
         /// <param name="target"></param>
-        public static void ToObserver(GameObject target)
+        public static void ToObserver(GameObject target, Action Complete = null)
         {
-            GameHandleEventSystem.TriggerEvent(CameraHandle.HandleName, PlayerModelObserve.TriggerEventName, new KeyValuePairs(new { Target = target}));
+            GameHandleEventSystem.TriggerEvent(
+                CameraHandle.HandleName, 
+                PlayerModelObserve.TriggerEventName, 
+                new KeyValuePairs(new { Target = target, COMPLETE = Complete == null ? CameraHandle.EmptyAction : Complete})
+            );
         }
 
         /// <summary>
@@ -42,9 +46,38 @@ namespace IOTLib
         /// </summary>
         /// <param name="go"></param>
         /// <param name="complete"></param>
+        [System.Obsolete("改用FD方法")]
         public static void FAndLookAt(this GameObject go, Action complete = null)
         {
             CameraHandle.F(go, complete, "D");
+        }
+
+        public static void FD(this GameObject go, Vector3? forward, Vector3? WorldLeftDirection, float radius = 1.1f, Action Complete =null)
+        {
+            if (Complete == null) Complete = () => CameraHelpFunc.ToAState();
+
+            var for3 = go.transform.forward;
+            var world_left = go.transform.TransformDirection(Vector3.left);
+
+            if (forward.HasValue)
+                for3 = go.transform.TransformDirection(forward.Value);
+
+            if (WorldLeftDirection.HasValue)
+                world_left = go.transform.TransformDirection(WorldLeftDirection.Value);
+
+            var arg = new { 
+                TARGET = go, 
+                RADIUS = radius, 
+                COMPLETE = Complete, 
+                MODEL = "D",
+                Forward = for3, WorldLeftDirection = world_left
+            };
+            
+            GameHandleEventSystem.TriggerEvent(
+                CameraHandle.HandleName, 
+                PlayerModelF.TriggerEventName, 
+                new KeyValuePairs(arg)
+            );
         }
 
         /// <summary>

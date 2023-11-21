@@ -21,7 +21,7 @@ namespace IOTLib
 
         private void OnEnable()
         {
-            m_DragWindowRect.Set(20, 80, WINDOW_WIDTH, Mathf.RoundToInt(Screen.height * 0.60f));
+            m_DragWindowRect.Set(20, 300, WINDOW_WIDTH, Mathf.RoundToInt(Screen.height * 0.60f));
         }
 
         private void Start()
@@ -91,8 +91,7 @@ namespace IOTLib
             GUILayout.FlexibleSpace();
             GUILayout.EndScrollView();
 
-            if(Event.current.mousePosition.y < 26)
-                GUI.DragWindow(new Rect(0,0, Screen.width, Screen.height));
+            GUI.DragWindow(new Rect(0,0, Screen.width, 30));
         }
 
         private void OnGUI()

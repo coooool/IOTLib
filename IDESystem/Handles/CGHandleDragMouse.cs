@@ -14,19 +14,38 @@ namespace IOTLib
     /// </summary>
     internal class CGHandleDragMouse : MonoBehaviour
     {
-        public static bool MouseInDragWindow { get; private set; }
+        internal static bool MouseInDragWindow { get; private set; }
 
-        private static WeakReference<ExportCGPrefab> m_SetObject = new WeakReference<ExportCGPrefab>(null);
+        internal static bool OtherIsUse { get; set; }
+
+        public static bool MouseIsUse => MouseInDragWindow || OtherIsUse;
+
+        private static WeakReference<ExportCGPrefab?> m_SetObject = new WeakReference<ExportCGPrefab?>(null);
+
+        private static bool IsUGUIPrefab { get; set; }
 
         public static ExportCGPrefab SetObject
         {
             get
             {
-                if (m_SetObject.TryGetTarget(out var obj)) return obj;
+                if (m_SetObject.TryGetTarget(out var obj))
+                    return obj;
+
                 return null;
             }
             set
             {
+                // 当前如果有拖拽对象则取消
+                if (value == null)
+                {
+                    OtherIsUse = false;
+                }
+                else
+                {
+                    OtherIsUse = true;
+                    IsUGUIPrefab = value.m_CgType.ToLower() == "ui" ? true : false;
+                }
+
                 m_SetObject.SetTarget(value);
             }
         }
@@ -40,11 +59,32 @@ namespace IOTLib
         void CreateNewCGPrefab(Vector3 world_pos)
         {
             var newGo = CGResources.InstanceCGPrefab(world_pos, SetObject);
-            
-            newGo.AddComponent<DragGameObject>();
+           
+            // ugui资源不用聚焦，
+            if (!IsUGUIPrefab)
+            {
+                newGo.AddComponent<DragGameObject>();
+
+                CameraHandle.F(newGo, () =>
+                {
+                    CameraHelpFunc.ToObserver(newGo);
+                }, "D2");
+            }
+            else
+            {
+                // UGUI直接使用它的缩放做为大小
+                newGo.transform.localScale = new Vector3(480, 320, 0);
+                newGo.GetComponent<ExportCGPrefab>();
+                newGo.AddComponent<DragGameObject2D>();
+            }
+
             CGPrefabEditorWindow.SelectActiveGameObject = newGo;
 
-            CameraHandle.F(newGo, null, "D");
+            // 默认发送一次事件，因为当前编辑器是打开的
+            newGo.SendMessage(
+                nameof(IDEStateChangedEvent.OnSceneEditorStateNotify), 
+                true, 
+                SendMessageOptions.DontRequireReceiver);
         }
 
         /// <summary>
@@ -111,7 +151,9 @@ namespace IOTLib
                 return;
 
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out var hitInfo, Camera.main.farClipPlane))
+            RaycastHit hitInfo = new RaycastHit();
+
+            if (IsUGUIPrefab || Physics.Raycast(ray,out hitInfo, Camera.main.farClipPlane))
             {
                 inGround = true;
             }
@@ -127,11 +169,16 @@ namespace IOTLib
                 {
                     if (MouseInArea(out var area) == false)
                     {
-                        if (inGround)
+                        if(IsUGUIPrefab)
                         {
-                            CreateNewCGPrefab(hitInfo.point);
-                            Event.current.Use();
+                            CreateNewCGPrefab(Input.mousePosition);
                         }
+                        else if (inGround)
+                        {
+                            CreateNewCGPrefab(hitInfo.point); 
+                        }
+
+                        Event.current.Use();
                     }
                     else
                     {
@@ -154,7 +201,7 @@ namespace IOTLib
 
             GUI.color = Color.white;
 
-            if (!inGround)
+            if(!IsUGUIPrefab && !inGround)
             {
                 var labelRect = new Rect(Input.mousePosition.x + 30, Screen.height - Input.mousePosition.y, 120, 22);
                 GUI.Label(labelRect, "请移到地面内", "box");

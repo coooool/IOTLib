@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using IOTLib;
 using System;
 using System.Collections;
@@ -116,10 +117,14 @@ namespace IOTLib
 
         private Vector3 MDLastClickCenterWorldPos;
         private Vector3 m_MoveAxis = Vector3.up;
+        // 触发过拖？
+        private bool m_TriggerDrag = false;
         #endregion
 
         private void OnMouseDown()
         {
+            CGHandleDragMouse.OtherIsUse = true;
+
             if (DragHandleType == DragHandleTypeEnum.GUI)
             {
                 return;
@@ -129,7 +134,21 @@ namespace IOTLib
             Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(gameObject.transform.position).z));
             MDLastClickCenterWorldPos = transform.position - mouseWorldPos;
 
+            if(CGPrefabEditorWindow.SelectActiveGameObject != gameObject)
+            {
+                CameraHandle.F(gameObject, () =>
+                {
+                    CameraHelpFunc.ToObserver(gameObject);
+                }, "D2");
+            }
+
             CGPrefabEditorWindow.SelectActiveGameObject = gameObject;
+        }
+
+        void OnDestroy()
+        {
+            if (CGPrefabEditorWindow.SelectActiveGameObject == gameObject)
+                CGPrefabEditorWindow.SelectActiveGameObject = null;
         }
 
         Vector3 GetDirection(int type)
@@ -176,6 +195,17 @@ namespace IOTLib
             {
                 case DragHandleActionEnum.All:
                     var targetPosition = mousePosition + MDLastClickCenterWorldPos;
+                    var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                    if(LayerUtility.GetGroundLayer(out var ground_layer))
+                    {
+                        if (Physics.Raycast(ray, out var hitInfo, Camera.main.farClipPlane, ground_layer))
+                        {
+                            // 在地面之上
+                            targetPosition.y = hitInfo.point.y;
+                        }
+                    }
+                     
                     transform.position = targetPosition;
                     break;
                 case DragHandleActionEnum.X:
@@ -221,6 +251,26 @@ namespace IOTLib
 
         private void OnMouseUp()
         {
+            CGHandleDragMouse.OtherIsUse = false;
+
+            if (DragMethod == DragHandleActionEnum.All && m_TriggerDrag)
+            {
+                // 如果点击了圆点则跟踪D号算法，否则只是C算法聚焦
+                //var model = DragMethod == DragHandleActionEnum.All ? "D" : "C";
+
+                //UniTask.Void(async () =>
+                //{
+                //    await UniTask.NextFrame();
+
+                    CameraHandle.F(gameObject, () =>
+                    {
+                        CameraHelpFunc.ToObserver(gameObject);
+                    }, "D2");
+                //});
+
+                m_TriggerDrag = false;
+            }
+
             // 完成拖拽操作
             DragHandleType = DragHandleTypeEnum.None;
             DragMethod = DragHandleActionEnum.None;
@@ -268,18 +318,21 @@ namespace IOTLib
                 }
                 else if (AXIS_CENTER_RECT.Contains(Event.current.mousePosition))
                 {
-                    if (Event.current.clickCount == 2)
-                    {
+                    //if (Event.current.clickCount == 2)
+                    //{
+                    //    CGPrefabEditorWindow.SelectActiveTransform = transform;
+                    //    CameraHandle.F(gameObject, null, "D2");
+                    //}
+                    //else if (Event.current.clickCount == 1)
+                    //{
                         CGPrefabEditorWindow.SelectActiveTransform = transform;
-                        CameraHandle.F(gameObject, null, "D");
-                    }
-                    else if (Event.current.clickCount == 1)
-                    {
-                        CGPrefabEditorWindow.SelectActiveTransform = transform;
-                    }
+                    //}
 
                     DragMethod = DragHandleActionEnum.All;
                     DragHandleType = DragHandleTypeEnum.PreGUI;
+
+                    //if (gameObject.TryGetComponent<PositionToGroundData>(out var pgd))
+                    //    pgd.enabled = false;
 
                     OnMouseDown();
 
@@ -293,14 +346,15 @@ namespace IOTLib
             }
             else if (Event.current.type == EventType.MouseDrag && DragHandleType == DragHandleTypeEnum.PreGUI)
             {
+                m_TriggerDrag = true;
                 DragHandleType = DragHandleTypeEnum.GUI;
             }
             else if (Event.current.type == EventType.MouseUp)
             {
                 // 恢复Y轴计算地面
-                if (DragHandleType == DragHandleTypeEnum.GUI && DragMethod == DragHandleActionEnum.Y)
-                    if(gameObject.TryGetComponent<PositionToGroundData>(out var pgd))
-                        pgd.enabled = true;
+                //if (DragHandleType == DragHandleTypeEnum.GUI && DragMethod == DragHandleActionEnum.Y)
+                //if(gameObject.TryGetComponent<PositionToGroundData>(out var pgd))
+                //    pgd.enabled = true;
 
                 OnMouseUp();
             }
@@ -308,6 +362,9 @@ namespace IOTLib
 
         private void OnGUI()
         {
+            if (CGPrefabEditorWindow.SelectActiveGameObject != gameObject)
+                return;
+
             var OldGUIMatrix = GUI.matrix;
             var selfPosition = transform.position;
 

@@ -33,9 +33,6 @@ namespace IOTLib
                 }
             }
 
-            if(result.Count == 0)
-                Debug.LogWarning($"查找Tag为空,标签:{string.Join(',', childTags)}");
-
             return result;
         }
 

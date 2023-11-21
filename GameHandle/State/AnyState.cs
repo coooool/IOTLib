@@ -78,6 +78,9 @@ public class AnyState : BaseFlowState
 
     public override async UniTask Exit(IFlow flow)
     {
+        // ¸Ä±äID
+        LastSnaphostId = 0;
+
         if (!IsMirrorState)
         {
             GetAllChildState(p =>

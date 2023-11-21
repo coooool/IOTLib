@@ -1,5 +1,6 @@
 using IOTLib;
 using IOTLib.IDESystem;
+using IOTLib.IDESystem.Handles;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace IOTLib
     /// <summary>
     /// CG场景工具箱
     /// </summary>
-    public class CGSceneToolsWindow : MonoBehaviour
+    public class CGSceneToolsWindow : MonoBehaviour, IDragArea
     {
         private const int WINDOW_WIDTH = 380;
         private Rect m_DragWindowRect;
@@ -27,14 +28,21 @@ namespace IOTLib
         private int m_lastCgSceneObjCount = 0;
         private int m_SelectTagIndex = -1;
 
+        public Rect DragArea => m_DragWindowRect;
+
         private void OnEnable()
         {
-            m_DragWindowRect.Set(Screen.width / 2 - WINDOW_WIDTH / 2, 80, WINDOW_WIDTH, 240);
+            m_DragWindowRect.Set(20, 30, WINDOW_WIDTH, 240);
 
             // 自动刷新Tag
             InvokeRepeating("UpdateSceneObjectTag", 1, 1.5f);
 
             UpdateSceneObjectTag();
+        }
+
+        void Start()
+        {
+            GetComponent<CGHandleDragMouse>().RegisterDragPerformEvent(this);
         }
 
         void SaveScene()
@@ -58,7 +66,13 @@ namespace IOTLib
             {
                 if (obj.HasTag(tag))
                 {
-                    obj.gameObject.GetOrCreateCompoent<DragGameObject>();
+                    if(obj.TryGetComponent<ExportCGPrefab>(out var cgtype))
+                    {
+                        if(cgtype.IsUGUI)
+                            obj.gameObject.GetOrCreateCompoent<DragGameObject2D>();
+                        else
+                            obj.gameObject.GetOrCreateCompoent<DragGameObject>();
+                    }
                 }
                 else
                 {
@@ -66,11 +80,17 @@ namespace IOTLib
                     {
                         DestroyImmediate(dgo);
                     }
+
+                    if (obj.TryGetComponent<DragGameObject2D>(out var dgo2))
+                    {
+                        DestroyImmediate(dgo2);
+                    }
                 }
             }
         }
 
         Vector2 m_scrollView;
+
         void WindowFunc(int windowid)
         {
             if (GUILayout.Button("保存场景"))
@@ -101,7 +121,7 @@ namespace IOTLib
                 GUILayout.Label("最后保存时间:未保存", "CenterLabel", GUILayout.ExpandWidth(true));
             }
 
-            GUI.DragWindow(new Rect(0, 0, Screen.width, Screen.height));
+            GUI.DragWindow(new Rect(0, 0, Screen.width, 30));
         }
 
         void UpdateSceneObjectTag()
@@ -139,6 +159,11 @@ namespace IOTLib
                 m_DragWindowRect = GUI.Window(998, m_DragWindowRect, WindowFunc, "CG场景工具箱");
 
             GUI.skin = null;
+        }
+
+        public void OnDragPerform(ExportCGPrefab target)
+        {
+            
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Data;
 using System;
 using IOTLib.Extend;
 using DG.Tweening.Core.Easing;
+using IOTLib.GameHandle;
 
 namespace IOTLib
 {
@@ -87,6 +88,24 @@ namespace IOTLib
         }
 
         /// <summary>
+        /// 获取这个快照
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static FlowStateShapshot GetThisSnapshot()
+        {
+            if (_anyState == null) 
+                throw new InvalidOperationException("CameraHandle还未初始化");
+            
+            if (_anyState.TryGetTarget(out var r))
+            {
+                return new FlowStateShapshot(r);
+            }
+
+            throw new InvalidOperationException("CameraHandle目标已经被释放");
+        }
+
+        /// <summary>
         /// 移除镜像节点
         /// </summary>
         /// <param name="state"></param>
@@ -133,6 +152,11 @@ namespace IOTLib
 
             var arg = new { TARGET_POS = Position, RADIUS = radius, COMPLETE = Complete, MODEL = Model, LOOKATV3 = lookAtV3 };
             GameHandleEventSystem.TriggerEvent(HandleName, PlayerModelF.TriggerEventName, new KeyValuePairs(arg));
+        }
+
+        internal static void F(KeyValuePairs args)
+        {
+            GameHandleEventSystem.TriggerEvent(HandleName, PlayerModelF.TriggerEventName, args);
         }
 
         public static void F(IEnumerable<Vector3> Points, Action Complete = null, string Model = "A", float radius = 1.1f)

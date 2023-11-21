@@ -92,7 +92,7 @@ namespace IOTLib
         /// <returns></returns>
         Vector3 GetInputTranslationDirection()
         {
-            var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseInDragWindow;
+            var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseIsUse;
 
             Vector3 direction = new Vector3();
             if (Input.GetKey(KeyCode.W))
@@ -332,7 +332,7 @@ namespace IOTLib
         {
             while (!cancellation.IsCancellationRequested)
             {
-                await UniTask.Yield(PlayerLoopTiming.Update);
+                await UniTask.Yield(PlayerLoopTiming.LastUpdate);
 
                 cancellation.ThrowIfCancellationRequested();       
 
@@ -345,7 +345,7 @@ namespace IOTLib
                     case CameraControlSetting.CameraControlMethod.Map:
                         m_AroundCamera.Update();
                         break;
-                }   
+                }
             }
         }
 
@@ -357,6 +357,10 @@ namespace IOTLib
             }
 
             mainCamera = Camera.main;
+
+            // 添加动态计算脚本
+            mainCamera.GetOrCreateCompoent<CameraDynBoost>();
+
             InitStartPos();
 
             StateChangedEvent?.Invoke(true);
@@ -393,9 +397,9 @@ namespace IOTLib
         /// <summary>
         /// 复位一次状态
         /// </summary>
-        //public static void ResetState()
-        //{
-        //    _global_A.InitStartPos();
-        //}
+        public static void ResetState()
+        {
+            _global_A.InitStartPos();
+        }
     }
 }

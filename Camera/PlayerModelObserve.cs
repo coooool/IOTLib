@@ -23,7 +23,8 @@ namespace IOTLib
         private Camera camera;
         private GameObject ObserverTarget;
 
-        private Vector3 cameraOffset;
+        private Vector3 targetPos;
+        //private Vector3 cameraOffset;
 
         public PlayerModelObserve():base("围绕观察物体模式")
         {
@@ -59,7 +60,7 @@ namespace IOTLib
                         dictory *= Mathf.Pow(1.65f, CameraControlSetting.Setting.boost);
                         camera.transform.Translate(dictory);
 
-                        cameraOffset += dictory;
+                        //cameraOffset += dictory;
                     }
 
                     if (!CameraHandle.IsPointerHoverGameObject)
@@ -68,13 +69,13 @@ namespace IOTLib
                         camera.transform.Translate(mouseScrollWheel);
                     }
 
-                    if (Input.GetMouseButton(0))
+                    if (Input.GetMouseButton(1))
                     {
                         float rotationAroundYAxis = Input.GetAxis("Mouse X") * CameraControlSetting.Setting.boost;
                         float rotationAroundXAxis = -Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.boost;
 
-                        camera.transform.RotateAround(ObserverTarget.transform.position, camera.transform.right, rotationAroundXAxis);
-                        camera.transform.RotateAround(ObserverTarget.transform.position, Vector3.up, rotationAroundYAxis);
+                        camera.transform.RotateAround(targetPos, camera.transform.right, rotationAroundXAxis);
+                        camera.transform.RotateAround(targetPos, Vector3.up, rotationAroundYAxis);
                     }
 
                     // 计算碰撞
@@ -94,8 +95,14 @@ namespace IOTLib
         public override UniTask Enter(IFlow flow)
         {
             ObserverTarget = flow.Vars.Get<GameObject>("Target");
-            
+            targetPos = ObserverTarget.transform.position;
+
             StateChangedEvent?.Invoke(true);
+
+            if (flow.Vars.TryGet<Action>("COMPLETE", out var Complete))
+            {
+                Complete?.Invoke();
+            }
 
             UniTask.Void(UpdateMouse, DestroyOrExitStateCancelToken);
 

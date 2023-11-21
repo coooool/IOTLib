@@ -19,11 +19,16 @@ namespace IOTLib
         [Header("资产类型")]
         public string m_CgType;
 
+        [HideInInspector]
+        public RectTransform UIRecttransform { get; set; }
+
         [SerializeField, HideInInspector]
         public int SourceInstanceID { get; set; }
 
         [SerializeField, HideInInspector]
         internal string m_PrefabID;
+
+        public bool IsUGUI => string.IsNullOrEmpty(m_CgType) ? false : m_CgType.ToLower() == "ui";
 
         public Texture GetIco()
         {

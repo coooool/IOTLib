@@ -14,6 +14,8 @@ namespace IOTLib
 
         internal static EditorSetting GSetting;
 
+        public static bool IsShow { get; private set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void InitEditorWindow()
         {
@@ -27,7 +29,6 @@ namespace IOTLib
             DontDestroyOnLoad(this);
         }
 
-
         private void OnDestroy()
         {
             Instance = null;
@@ -37,10 +38,17 @@ namespace IOTLib
         {
             if (Instance.TryGetComponent<CGPrefabEditorWindow>(out var cgpew))
             {
+                IsShow = false;
+
                 foreach (var a in TagSystem.Find<DragGameObject>(true, CGResources.TAGName))
                 {
-                    a.SendMessage("OnSceneEditorStateNotify", false, SendMessageOptions.DontRequireReceiver);
+                    a.SendMessage(nameof(IDEStateChangedEvent.OnSceneEditorStateNotify), false, SendMessageOptions.DontRequireReceiver);
+                    Destroy(a);
+                }
 
+                foreach (var a in TagSystem.Find<DragGameObject2D>(true, CGResources.TAGName))
+                {
+                    a.SendMessage(nameof(IDEStateChangedEvent.OnSceneEditorStateNotify), false, SendMessageOptions.DontRequireReceiver);
                     Destroy(a);
                 }
 
@@ -48,6 +56,9 @@ namespace IOTLib
                 Destroy(Instance.GetComponent<CGSceneToolsWindow>());
                 Destroy(Instance.GetComponent<CGHandleDragMouse>());
                 Destroy(cgpew);
+
+                // »Ö¸´Ä¬ÈÏ×´Ì¬
+                CameraHelpFunc.ToAState();
             }
         }
 
@@ -57,6 +68,8 @@ namespace IOTLib
             
             if (Instance.TryGetComponent<CGPrefabEditorWindow>(out _) == false)
             {
+                IsShow = true;
+
                 Instance.gameObject.AddComponent<CGSceneToolsWindow>();
                 Instance.gameObject.AddComponent<CGPrefabWindow>();
                 Instance.gameObject.AddComponent<CGPrefabEditorWindow>();
@@ -64,9 +77,12 @@ namespace IOTLib
 
                 foreach (var a in TagSystem.Find<ExportCGPrefab>(true, tagTypes))
                 {
-                    a.gameObject.AddComponent<DragGameObject>();
+                    if(a.IsUGUI)
+                        a.gameObject.AddComponent<DragGameObject2D>();
+                    else
+                        a.gameObject.AddComponent<DragGameObject>();
 
-                    a.SendMessage("OnSceneEditorStateNotify", true, SendMessageOptions.DontRequireReceiver);
+                    a.SendMessage(nameof(IDEStateChangedEvent.OnSceneEditorStateNotify), true, SendMessageOptions.DontRequireReceiver);
                 }
             }
         }
@@ -80,8 +96,8 @@ namespace IOTLib
         public static void Toggle()
         {
             if (Instance.TryGetComponent<CGSceneToolsWindow>(out _))
-            {
-                Close();
+            {      
+                Close();      
             }
             else
             {

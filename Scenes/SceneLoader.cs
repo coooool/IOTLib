@@ -12,7 +12,12 @@ namespace IOTLib.Scenes
         private static bool _loaded = false;
 
         // 设置激活的场景名。即将切换场景
-        public static UnityEvent<string,string> PreSetActiveScene = new ();
+        //public static UnityEvent<string,string> PreSetActiveScene = new ();
+
+        /// <summary>
+        /// 即将卸载旧的场景加载目标时调用这个
+        /// </summary>
+        public static UnityEvent<string> PreLoadScene = new ();
 
         /// <summary>
         /// 加载一个附加场景
@@ -32,6 +37,11 @@ namespace IOTLib.Scenes
                 Debug.LogError($"系统已经处于加载场景中,当前正在重试继续加载，这通常是异常操作被阻止了。");
                 throw new OperationCanceledException($"系统繁忙时继续加载了{sceneName}");
             }
+
+            CameraHelpFunc.ToNullState();
+            await UniTask.NextFrame();
+
+            PreLoadScene?.Invoke(sceneName);
 
             // Core 名称
             var CoreSceneName = DBServer.GetVar("SCENELOADER_CORE_NAME", "Core");
@@ -58,7 +68,7 @@ namespace IOTLib.Scenes
 
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive).ToUniTask(progress);
 
-            PreSetActiveScene?.Invoke(OldSceneName, sceneName);
+            //PreSetActiveScene?.Invoke(OldSceneName, sceneName);
 
             SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
 

@@ -26,6 +26,24 @@ public abstract class BaseFlowState : IFlowState
         }
     }
 
+    /// <summary>
+    /// 每入触发事件都会改变ID
+    /// Set 0 随意一个数值修改它
+    /// </summary>
+    private uint m_LastSnaphostId = 0;
+    public uint LastSnaphostId
+    {
+        get
+        {  
+            return m_LastSnaphostId;
+        }
+
+        set
+        {
+            m_LastSnaphostId = (uint)UnityEngine.Random.Range(1, int.MaxValue);
+        }
+    }
+
     public bool IsListener { get; private set; }
 
     IFlowStateGraph IFlowState.GraphRef { get; set; } = null;
@@ -101,6 +119,7 @@ public abstract class BaseFlowState : IFlowState
     #region 开公事件
     public virtual UniTask Enter(IFlow flow)
     {
+        LastSnaphostId = 0;
         return UniTask.CompletedTask;
     }
 

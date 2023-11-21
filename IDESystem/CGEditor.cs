@@ -10,6 +10,7 @@ namespace IOTLib
     {
         internal string FileId;
 
+        internal string CustomName;
         /// <summary>
         /// 只有要存储过程才有值。
         /// </summary>
@@ -19,9 +20,10 @@ namespace IOTLib
         /// 导出脚本到编辑器中
         /// </summary>
         /// <param name="fileId">文件ID</param>
-        public CGEditor(string fileId)
+        public CGEditor(string fileId, string customName = null)
         {
             FileId = fileId;
+            CustomName = customName;
         }
     }
 }

@@ -51,6 +51,8 @@ namespace IOTLib
 
         public bool ToggleValue { get; set; }
 
+        internal string m_CGEditorHeaderName { get; set; }
+
         public string TypeName
         {
             get
@@ -65,6 +67,13 @@ namespace IOTLib
 
                 return m_TypeName;
             }
+
+            set
+            {
+                m_TypeName = value;
+            }
         }
+
+        internal string HeaderName => string.IsNullOrEmpty(m_CGEditorHeaderName) ? TypeName : m_CGEditorHeaderName;
     }
 }

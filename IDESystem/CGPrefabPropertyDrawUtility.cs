@@ -35,6 +35,10 @@ namespace IOTLib
             {
                 vars.Clear();
 
+                var ce = a.GetType().GetCustomAttribute<CGEditor>(false);
+
+                if (ce == null) continue;
+
                 IteraVars(a, (b) =>
                 {
                     vars.Add(b);
@@ -54,6 +58,8 @@ namespace IOTLib
                     }
 
                     var newData = new VarGroup() { Behaviour = a, Vars = vars.ToArray(), ToggleValue = true, CustomEditor = customEditor };
+                    newData.m_CGEditorHeaderName = ce.CustomName;
+
                     callBack?.Invoke(newData);
                 }
             }
@@ -66,8 +72,6 @@ namespace IOTLib
             if (target == null) return;
 
             var targetType = target.GetType();
-
-            if (targetType.GetCustomAttribute<CGEditor>(false) == null) return;
 
             var fields = targetType.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
@@ -105,39 +109,61 @@ namespace IOTLib
             return changed;
         }
 
-        static void MakeString(CGVar var, System.Object obj)
+        static bool DrawBoolProperty(string label, bool value, out bool changedValue)
+        {
+            bool changed = false;
+            changedValue = false;
+
+            var newValue = GUILayout.Toggle(value, label);
+            if (newValue != value)
+            {
+                changedValue = newValue;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        static bool MakeString(CGVar var, System.Object obj)
         {
             var value = var.FieldInfo.GetValue(obj) as string;
 
             if (DrawStringProperty(var.VarName, value, out var newText))
             {
                 var.FieldInfo.SetValue(obj, newText);
+                return true;
             }
+
+            return false;
         }
-        static void MakeFloat(CGVar var, System.Object obj)
+        static bool MakeFloat(CGVar var, System.Object obj)
         {
             var value = (float)var.FieldInfo.GetValue(obj);
 
             if (DrawStringProperty(var.VarName, value.ToString(), out var newText))
             {
                 // 还是小数点，在输入中
-                if (newText.EndsWith(".")) return;
+                if (newText.EndsWith(".")) return false;
 
                 if (float.TryParse(newText.Trim(), out var newFloat))
                 {
                     var.FieldInfo.SetValue(obj, newFloat);
+
+                    return true;
                 }
             }
+
+            return false;
         }
 
-        static void MakeNumber(CGVar var, System.Object obj, IntTypeEnum intType)
+        static bool MakeNumber(CGVar var, System.Object obj, IntTypeEnum intType)
         {
             var value = var.FieldInfo.GetValue(obj);
 
             if (DrawStringProperty(var.VarName, value.ToString(), out var newText))
             {
                 // 还是小数点，在输入中
-                if (newText.EndsWith(".")) return;
+                if (newText.EndsWith(".")) return false;
 
                 switch (intType)
                 {
@@ -179,9 +205,11 @@ namespace IOTLib
                         break;
                 }
             }
+
+            return true;
         }
 
-        static void MakeVec2(CGVar var, System.Object obj)
+        static bool MakeVec2(CGVar var, System.Object obj)
         {
             var value = (Vector2)var.FieldInfo.GetValue(obj);
 
@@ -190,12 +218,16 @@ namespace IOTLib
                 try
                 {
                     var.FieldInfo.SetValue(obj, newText.ToVector2());
+
+                    return true;
                 }
                 catch (InvalidOperationException) { }
             }
+
+            return false;
         }
 
-        static void MakeVec3(CGVar var, System.Object obj)
+        static bool MakeVec3(CGVar var, System.Object obj)
         {
             var value = (Vector3)var.FieldInfo.GetValue(obj);
 
@@ -204,12 +236,16 @@ namespace IOTLib
                 try
                 {
                     var.FieldInfo.SetValue(obj, newText.ToVector3());
+
+                    return true;
                 }
                 catch (InvalidOperationException) { }
             }
+
+            return false;
         }
 
-        static void MakeVec4(CGVar var, System.Object obj)
+        static bool MakeVec4(CGVar var, System.Object obj)
         {
             var value = (Vector4)var.FieldInfo.GetValue(obj);
 
@@ -218,12 +254,16 @@ namespace IOTLib
                 try
                 {
                     var.FieldInfo.SetValue(obj, newText.ToVector4());
+
+                    return true;
                 }
                 catch (InvalidOperationException) { }
             }
+
+            return false;
         }
 
-        static void MakeByte(CGVar var, System.Object obj)
+        static bool MakeByte(CGVar var, System.Object obj)
         {
             var value = (byte)var.FieldInfo.GetValue(obj);
 
@@ -232,69 +272,111 @@ namespace IOTLib
                 if (byte.TryParse(newText, out var result))
                 {
                     var.FieldInfo.SetValue(obj, result);
+
+                    return true;
                 }
             }
+
+            return false;
+        }
+
+        static bool MakeBool(CGVar var, System.Object obj)
+        {
+            var value = (bool)var.FieldInfo.GetValue(obj);
+
+            if (DrawBoolProperty(var.VarName, value, out var changedValue))
+            {
+                var.FieldInfo.SetValue(obj, changedValue);
+
+                return true;
+            }
+
+            return false;
         }
 
         static Vector2 groupScroll = Vector2.zero;
+        static bool HasChanged = false;
 
-        internal static void DrawFields(Component instance, IEnumerable<CGVar> vars)
+        // 一些CustomEditor自己绘制了可能要用这个
+        public static void SetGUIDirty()
         {
+            HasChanged = true;
+        }
+
+        /// <summary>
+        /// 返回是否修改了字段
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <param name="vars"></param>
+        /// <returns></returns>
+        internal static bool DrawFields(Component instance, IEnumerable<CGVar> vars)
+        {
+            bool changed = false;
+            HasChanged = false;
+
             foreach (var a in vars)
             {
                 GUILayout.BeginVertical();
 
                 if (a.FieldInfo.FieldType == typeof(string))
                 {
-                    MakeString(a, instance);
+                    changed = MakeString(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(float))
                 {
-                    MakeFloat(a, instance);
+                    changed = MakeFloat(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(int))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.I32);
+                    changed = MakeNumber(a, instance, IntTypeEnum.I32);
                 }
                 else if (a.FieldInfo.FieldType == typeof(uint))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.U32);
+                    changed = MakeNumber(a, instance, IntTypeEnum.U32);
                 }
                 else if (a.FieldInfo.FieldType == typeof(Vector2))
                 {
-                    MakeVec2(a, instance);
+                    changed = MakeVec2(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(Vector3))
                 {
-                    MakeVec3(a, instance);
+                    changed = MakeVec3(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(Vector4))
                 {
-                    MakeVec4(a, instance);
+                    changed = MakeVec4(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(byte))
                 {
-                    MakeByte(a, instance);
+                    changed = MakeByte(a, instance);
                 }
                 else if (a.FieldInfo.FieldType == typeof(Int64))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.I64);
+                    changed = MakeNumber(a, instance, IntTypeEnum.I64);
                 }
                 else if (a.FieldInfo.FieldType == typeof(UInt64))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.U64);
+                    changed = MakeNumber(a, instance, IntTypeEnum.U64);
                 }
                 else if (a.FieldInfo.FieldType == typeof(long))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.Long);
+                    changed = MakeNumber(a, instance, IntTypeEnum.Long);
                 }
                 else if (a.FieldInfo.FieldType == typeof(ulong))
                 {
-                    MakeNumber(a, instance, IntTypeEnum.ULong);
+                    changed = MakeNumber(a, instance, IntTypeEnum.ULong);
+                }
+                else if(a.FieldInfo.FieldType == typeof(bool))
+                {
+                    changed = MakeBool(a, instance);
                 }
 
                 GUILayout.EndVertical();
+
+                if(changed) HasChanged = true;
             }
+
+            return HasChanged;
         }
 
         public static void DrawVarGroup(IEnumerable<VarGroup> groups)
@@ -303,16 +385,27 @@ namespace IOTLib
 
             foreach (var g in groups)
             {
-                GUILayout.Box(g.TypeName, "Header");
+                GUILayout.Box(g.HeaderName, "Header");
 
                 if (g.CustomEditor != null)
                 {
                     g.CustomEditor.OnGUI(g.Behaviour, g.Vars);
+
+                    if (HasChanged) g.CustomEditor.OnCGFieldUpdate();
                 }
                 else
                 {
                     DrawFields(g.Behaviour, g.Vars);
                 }
+
+                // 通过编辑器有值发生变更了
+                if (HasChanged)
+                {
+                    g.Behaviour.gameObject.SendMessage(
+                            nameof(IComponentPropertyUpdate.OnCGFieldUpdate),
+                            SendMessageOptions.DontRequireReceiver);
+                }
+
             }
 
             GUILayout.EndScrollView();

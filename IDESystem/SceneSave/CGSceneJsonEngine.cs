@@ -40,11 +40,18 @@ namespace IOTLib
 
         protected override void WriteGameObject(StreamWriter sw, ExportCGPrefab gameObject, IEnumerable<CGEditor> monoScript)
         {
+            var pos = gameObject.transform.position;
+
+            if(gameObject.IsUGUI)
+            {
+                pos = gameObject.UIRecttransform.anchoredPosition;
+            }
+
             var save_data = new CGModelJsonData
             {
                 Id = gameObject.m_PrefabID,
                 Name = gameObject.name,
-                Position = gameObject.transform.position,
+                Position = pos,
                 Rotation = gameObject.transform.eulerAngles,
                 Scale = gameObject.transform.localScale,
                 // 保存脚本数据
@@ -71,7 +78,10 @@ namespace IOTLib
                     {
                         var newItem = GameObject.Instantiate<GameObject>(tmp.gameObject, node.Position, Quaternion.Euler(node.Rotation));
                         newItem.transform.localScale = node.Scale;
-                        if(false == string.IsNullOrEmpty(node.Name)) newItem.name = node.Name;
+
+                        if(false == string.IsNullOrEmpty(node.Name))
+                            newItem.name = node.Name;
+
                         newItem.AddTag(CGResources.TAGName);
 
                         foreach (var monoData in node.Data)
