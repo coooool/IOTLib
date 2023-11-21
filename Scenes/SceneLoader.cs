@@ -12,7 +12,7 @@ namespace IOTLib.Scenes
         private static bool _loaded = false;
 
         // 设置激活的场景名。即将切换场景
-        //public static UnityEvent<string,string> PreSetActiveScene = new ();
+        public static UnityEvent<string,string> PreSetActiveScene = new ();
 
         /// <summary>
         /// 即将卸载旧的场景加载目标时调用这个
@@ -68,7 +68,7 @@ namespace IOTLib.Scenes
 
             await SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive).ToUniTask(progress);
 
-            //PreSetActiveScene?.Invoke(OldSceneName, sceneName);
+            PreSetActiveScene?.Invoke(OldSceneName, sceneName);
 
             SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
 
