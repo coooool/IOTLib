@@ -186,11 +186,11 @@ namespace IOTLib
                     {
                         await UniTask.SwitchToTaskPool();
 
-                        client.Send(System.Text.Encoding.UTF8.GetBytes(m_HeartText));
-                        //if(!client.Ping(m_HeartText))
-                        //{
-                        //    Debug.LogWarning($"发送心跳包失败...!{m_Url}");
-                        //}
+                        client.SendAsync(System.Text.Encoding.UTF8.GetBytes(m_HeartText), (b) => { if (!b) Debug.LogError("发送心跳包失败"); });
+                        if (!client.Ping(m_HeartText))
+                        {
+                            Debug.LogWarning($"PING失败...!{m_Url}");
+                        }
                     }                    
                 } while (!token.IsCancellationRequested);
             }, this.GetCancellationTokenOnDestroy());

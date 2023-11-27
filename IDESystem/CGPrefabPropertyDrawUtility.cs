@@ -44,12 +44,13 @@ namespace IOTLib
                     vars.Add(b);
                 });
 
-                if (vars.Count > 0)
-                {
-                    CGCustomEditor? customEditor = null;
+                CGCustomEditor? customEditor = null;
 
-                    // 自定义编辑器
-                    var editor = a.GetType().GetCustomAttribute<CGCustomEditorAttribute>(true);
+                // 自定义编辑器
+                var editor = a.GetType().GetCustomAttribute<CGCustomEditorAttribute>(true);
+
+                if (vars.Count > 0 || editor != null)
+                {
                     if (editor != null && editor.CEType != null)
                     {
                         customEditor = Activator.CreateInstance(editor.CEType) as CGCustomEditor;
