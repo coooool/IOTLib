@@ -82,7 +82,7 @@ namespace IOTLib
 		// Æ½ÒÆ
 		void UpdateTranslate()
 		{
-            if (!PointerOverGameObject && Input.GetMouseButton(0))
+            if (!IOLockState.AllLock() && Input.GetMouseButton(0))
             {
                 float num = Input.GetAxis("Mouse X") * CameraControlSetting.Setting.mouseTranslationSensitivity * CameraDynBoost.Boost;
                 float num2 = Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.mouseTranslationSensitivity * CameraDynBoost.Boost;
@@ -99,7 +99,7 @@ namespace IOTLib
 
         internal void Update()
 		{
-            PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseIsUse;
+            PointerOverGameObject = IOLockState.AllLock();
 
 			if (!PointerOverGameObject)
 			{
@@ -152,16 +152,19 @@ namespace IOTLib
 
         protected void UpdateAround()
 		{
-            if (!PointerOverGameObject && Input.GetMouseButton(1))
+			var lock_state = IOLockState.AllLock();
+
+            if (!lock_state && Input.GetMouseButton(1))
 			{
                 TargetAngles.y += Input.GetAxis("Mouse X") * CameraControlSetting.Setting.mousePointSensitivity;
                 TargetAngles.x -= Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.mousePointSensitivity;
                 TargetAngles.x = Mathf.Clamp(TargetAngles.x, angleRange.x, angleRange.y);
             }
 
+			if(!lock_state)
             TargetDistance -= Input.GetAxis("Mouse ScrollWheel") * CameraControlSetting.Setting.mouseWheelSensitivity * CameraDynBoost.Boost;
-            
-			if(CameraControlSetting.Setting.LimitMapArea)
+
+            if (CameraControlSetting.Setting.LimitMapArea)
 				TargetDistance = Mathf.Clamp(TargetDistance, CameraControlSetting.Setting.LimitHeight.x, CameraControlSetting.Setting.LimitHeight.y);
 
             CurrentAngles = Vector2.Lerp(CurrentAngles, TargetAngles, CameraControlSetting.Setting.boost * Time.deltaTime);

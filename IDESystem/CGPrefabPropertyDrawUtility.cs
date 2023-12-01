@@ -382,7 +382,7 @@ namespace IOTLib
 
         public static void DrawVarGroup(IEnumerable<VarGroup> groups)
         {
-            groupScroll = GUILayout.BeginScrollView(groupScroll);
+            groupScroll = GUILayout.BeginScrollView(groupScroll, false, false);
 
             foreach (var g in groups)
             {

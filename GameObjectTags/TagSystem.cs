@@ -58,8 +58,8 @@ namespace IOTLib
                 }
             }
 
-            if (datas.Count == 0)
-                Debug.LogWarning($"查找Tag组件{typeof(T).Name}为空,标签:{string.Join(',', childTags)}");
+            //if (datas.Count == 0)
+            //    Debug.LogWarning($"查找Tag组件{typeof(T).Name}为空,标签:{string.Join(',', childTags)}");
 
             return datas;
         }
@@ -80,7 +80,7 @@ namespace IOTLib
                 }
             }
 
-            Debug.LogWarning($"查找Tag为空,次标签:{string.Join(',', subTag)}");
+            //Debug.LogWarning($"查找Tag为空,次标签:{string.Join(',', subTag)}");
 
             return null;
         }

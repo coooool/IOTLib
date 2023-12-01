@@ -92,7 +92,7 @@ namespace IOTLib
         /// <returns></returns>
         Vector3 GetInputTranslationDirection()
         {
-            var PointerOverGameObject = CameraHandle.IsPointerOverGameObject || CameraHandle.IsPointerHoverGameObject || CGHandleDragMouse.MouseIsUse;
+            var PointerOverGameObject = IOLockState.AllLock();
 
             Vector3 direction = new Vector3();
             if (Input.GetKey(KeyCode.W))
@@ -233,7 +233,7 @@ namespace IOTLib
 
         void Move()
         {
-            if (!CameraHandle.IsPointerHoverGameObject && Input.GetMouseButtonDown(1))
+            if (!IOLockState.IsPointerHoverGameObject && Input.GetMouseButtonDown(1))
             {
                 Cursor.lockState = CursorLockMode.Locked;
             }
@@ -242,7 +242,7 @@ namespace IOTLib
                 Cursor.lockState = CursorLockMode.None;
             }
 
-            if (!CameraHandle.IsPointerOverGameObject && CameraControlSetting.Setting.HasCameraControlMethod(ModelControlTypeEnum.Rotate))
+            if (!IOLockState.IsPointerOverGameObject && CameraControlSetting.Setting.HasCameraControlMethod(ModelControlTypeEnum.Rotate))
             {
                 if (Input.GetMouseButtonDown(1))
                 {

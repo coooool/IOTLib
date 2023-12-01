@@ -123,7 +123,7 @@ namespace IOTLib
 
         private void OnMouseDown()
         {
-            CGHandleDragMouse.OtherIsUse = true;
+            IOLockState.OtherIsUse = true;
 
             if (DragHandleType == DragHandleTypeEnum.GUI)
             {
@@ -251,7 +251,7 @@ namespace IOTLib
 
         private void OnMouseUp()
         {
-            CGHandleDragMouse.OtherIsUse = false;
+            IOLockState.OtherIsUse = false;
 
             if (DragMethod == DragHandleActionEnum.All && m_TriggerDrag)
             {

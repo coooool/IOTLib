@@ -19,8 +19,6 @@ namespace IOTLib
         /// <summary>
         ///  Û±Í‘⁄UI…œ
         /// </summary>
-        public static bool IsPointerOverGameObject { get; set; }
-        public static bool IsPointerHoverGameObject { get; set; }
 
         private static WeakReference<AnyState> _anyState = null;
 

@@ -43,14 +43,14 @@ namespace IOTLib
 
                 mouseScrollWheel = Vector3.zero;
 
-                if (Application.isFocused && !CameraHandle.IsPointerOverGameObject)
+                if (!IOLockState.CGEditorLock())
                 {  
                     var oldPos = camera.transform.position;
                     var oldRotation = camera.transform.rotation;
 
                     // 鼠标不在UI上，后续需要加入别的输入器
 
-                    if (Input.GetMouseButton(2))
+                    if (Input.GetMouseButton(1))
                     {
                         var mouseMovement = new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) / 2;
                         var mouseSensitivityFactor = CameraControlSetting.Setting.mouseSensitivityCurve.Evaluate(mouseMovement.magnitude);
@@ -63,13 +63,13 @@ namespace IOTLib
                         //cameraOffset += dictory;
                     }
 
-                    if (!CameraHandle.IsPointerHoverGameObject)
-                    { 
+                    //if (!IOLockState.IsPointerHoverGameObject)
+                    //{ 
                         mouseScrollWheel.z = Input.GetAxis("Mouse ScrollWheel") * CameraControlSetting.Setting.boost * 6;
                         camera.transform.Translate(mouseScrollWheel);
-                    }
+                    //}
 
-                    if (Input.GetMouseButton(1))
+                    if (Input.GetMouseButton(0))
                     {
                         float rotationAroundYAxis = Input.GetAxis("Mouse X") * CameraControlSetting.Setting.boost;
                         float rotationAroundXAxis = -Input.GetAxis("Mouse Y") * CameraControlSetting.Setting.boost;

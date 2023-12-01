@@ -43,13 +43,63 @@ namespace IOTLib
             }
             else
             {
-                Debug.LogError($"找不到目标文件:{save_file_path}");
+                Debug.Log($"当前场景不存在数据:{save_file_path}");
             }
         }
 
         public virtual void SaveScene(IEnumerable<ExportCGPrefab> gameObjects)
         {
             Init(OutputFilePath, gameObjects);
+        }
+
+        // 备份旧的文件
+        void BakOldSceneFile(string cg_file_path)
+        {
+            var bak_folder = Path.Combine(Path.GetDirectoryName(cg_file_path), "bak");
+            
+            if(!Directory.Exists(bak_folder))
+            {
+                Directory.CreateDirectory(bak_folder);
+            }
+
+            var bak_file_name = string.Format("{0}{1}.cgscene", 
+                Path.GetFileNameWithoutExtension(cg_file_path),
+                DateTime.Now.ToString("yyyy-M-d-HH-ss-m")
+            );
+
+            var bak_full_path = Path.Combine(bak_folder, bak_file_name);
+            
+            if (File.Exists(bak_full_path))
+            {
+                Debug.Log("请勿短时间内多次保存重复场景，这将替换最近的备份数据");
+                File.Delete(bak_full_path);
+                //Debug.LogWarning("备份场景时发现相同的备份，尝试使用新的文件名...");
+
+                //int errCount = 0;
+
+                //do
+                //{
+                //    var new_file_path = string.Format("{0}-{1}", Path.GetFileNameWithoutExtension(bak_full_path), UnityEngine.Random.Range(1, 99999));
+
+                //    if(!File.Exists(new_file_path))
+                //    {
+                //        File.Move(bak_full_path, new_file_path);
+                //        Debug.LogWarning($"修复备份数据成功！");
+
+                //        bak_full_path = new_file_path;
+                //        break;
+                //    }
+
+                //    if(++errCount > 999)
+                //    {
+                //        Debug.LogWarning("尝试修复备份文件但是失败了。本次示备份数据");
+                //        return;
+                //    }
+
+                //} while (true);
+            }
+
+            File.Move(cg_file_path, bak_full_path);
         }
 
         /// <summary>
@@ -62,12 +112,19 @@ namespace IOTLib
 
             try
             {
-                if (File.Exists(save_file_path))
+                BakOldSceneFile(save_file_path);
+
+                var save_temp_file_path = Path.Combine(
+                    Path.GetDirectoryName(save_file_path), 
+                    Path.GetFileNameWithoutExtension(fileName) + ".temp"
+                    );
+
+                if (File.Exists(save_temp_file_path))
                 {
-                    File.Delete(save_file_path);
+                    File.Delete(save_temp_file_path);
                 }
 
-                using (var sw = new StreamWriter(save_file_path, false, System.Text.Encoding.UTF8))
+                using (var sw = new StreamWriter(save_temp_file_path, false, System.Text.Encoding.UTF8))
                 {
                     BeginWrite(sw);
 
@@ -97,6 +154,13 @@ namespace IOTLib
 
                     EndWrite(sw);
                 }
+
+                if (File.Exists(save_file_path))
+                {
+                    File.Delete(save_file_path);
+                }
+
+                File.Move(save_temp_file_path, save_file_path);
 
                 return true;
             }

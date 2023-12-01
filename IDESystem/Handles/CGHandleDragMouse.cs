@@ -14,12 +14,6 @@ namespace IOTLib
     /// </summary>
     internal class CGHandleDragMouse : MonoBehaviour
     {
-        internal static bool MouseInDragWindow { get; private set; }
-
-        internal static bool OtherIsUse { get; set; }
-
-        public static bool MouseIsUse => MouseInDragWindow || OtherIsUse;
-
         private static WeakReference<ExportCGPrefab?> m_SetObject = new WeakReference<ExportCGPrefab?>(null);
 
         private static bool IsUGUIPrefab { get; set; }
@@ -38,11 +32,11 @@ namespace IOTLib
                 // 当前如果有拖拽对象则取消
                 if (value == null)
                 {
-                    OtherIsUse = false;
+                    IOLockState.OtherIsUse = false;
                 }
                 else
                 {
-                    OtherIsUse = true;
+                    IOLockState.OtherIsUse = true;
                     IsUGUIPrefab = value.m_CgType.ToLower() == "ui" ? true : false;
                 }
 
@@ -126,21 +120,31 @@ namespace IOTLib
             return false;
         }
 
+        bool MouseInArea(IDragArea area)
+        {
+            if (CGGUIUtility.TestMouseInWindow(area.DragArea))
+            {                
+                return true;
+            }
+
+            return false;
+        }
+
         void Update()
         {
             if (MouseInArea(out var _))
             {
-                MouseInDragWindow = true;
+                IOLockState.CGEditorMouseInDragWindow = true;
             }
             else
             {
-                MouseInDragWindow = false;
+                IOLockState.CGEditorMouseInDragWindow = false;
             }
         }
 
         void OnDestroy()
         {
-            MouseInDragWindow = false;
+            IOLockState.CGEditorMouseInDragWindow = false;
         }
 
         void OnGUI()
