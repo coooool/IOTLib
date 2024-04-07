@@ -157,7 +157,7 @@ namespace IOTLib
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hitInfo = new RaycastHit();
 
-            if (IsUGUIPrefab || Physics.Raycast(ray,out hitInfo, Camera.main.farClipPlane))
+            if (IsUGUIPrefab || Physics.Raycast(ray,out hitInfo, Camera.main.farClipPlane, LayerUtility.DragAreaLayerMask))
             {
                 inGround = true;
             }

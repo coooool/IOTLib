@@ -10,7 +10,25 @@ namespace IOTLib
         public static int cacheMask = -1;
         public static int? cacheGroundLayer;
 
+       
+
         public const string GroundLayerName = "Ground";
+        public const string DragAreaLayerName = "DragArea";
+
+        #region DragArea
+        static int cacheDragLayerMask = -1;
+        public static int DragAreaLayer => LayerMask.NameToLayer(DragAreaLayerName);
+        public static int DragAreaLayerMask
+        {
+            get
+            {
+                if(cacheDragLayerMask == -1)
+                    cacheDragLayerMask = LayerMask.GetMask(DragAreaLayerName);
+
+                return cacheDragLayerMask;
+            }
+        }
+        #endregion
 
         /// <summary>
         /// 获取所有层的俺码
