@@ -52,7 +52,7 @@ namespace IOTLib
 
                     if (Input.GetMouseButton(1))
                     {
-                        var mouseMovement = new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) / 2;
+                        var mouseMovement = new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * CameraControlSetting.Setting.mouseTranslationSensitivity;
                         var mouseSensitivityFactor = CameraControlSetting.Setting.mouseSensitivityCurve.Evaluate(mouseMovement.magnitude);
 
                         Vector3 direction = mouseMovement * mouseSensitivityFactor;
