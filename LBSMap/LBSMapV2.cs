@@ -38,7 +38,7 @@ namespace IOTLib
 
         // 当计算的位置无效时，显示在这个位置
         public bool m_OpenIvalidPosReset = false;
-        public Vector3 m_InvalidPosition;
+        public Vector3[] m_InvalidPosition;
 
         public bool UpdateLntLatData()
         {
@@ -117,7 +117,7 @@ namespace IOTLib
                     Debug.LogWarning("转换坐标时无法发现地面");
 
                     if (m_OpenIvalidPosReset)
-                        return m_InvalidPosition;
+                        return m_InvalidPosition[UnityEngine.Random.Range(0, m_InvalidPosition.Length-1)];
                 }
             }
 
@@ -131,7 +131,7 @@ namespace IOTLib
                 return pos;
             }
 
-            return m_InvalidPosition;
+            return m_InvalidPosition[UnityEngine.Random.Range(0, m_InvalidPosition.Length - 1)];
         }
 
         /// <summary>

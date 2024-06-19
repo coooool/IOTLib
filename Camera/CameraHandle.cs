@@ -16,6 +16,9 @@ namespace IOTLib
     public class CameraHandle : FlowStateGraph
     {
         public const string HandleName = "MainCamera";
+
+        public static bool IsPointerHoverGameObject { get; set; }
+
         /// <summary>
         ///  Û±Í‘⁄UI…œ
         /// </summary>
