@@ -18,6 +18,7 @@ namespace IOTLib
         public const string HandleName = "MainCamera";
 
         public static bool IsPointerHoverGameObject { get; set; }
+        public static bool IsPointerOverGameObject { get; set; } 
 
         /// <summary>
         ///  Û±Í‘⁄UI…œ
